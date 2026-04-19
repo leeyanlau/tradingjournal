@@ -556,10 +556,10 @@ export default function Home() {
 
   // FILTERS
   const [filters, setFilters] = useState({
-    session: 'All',
-    result: 'All',
-    feeling: 'All',
-    minScore: 0,
+    session: [] as string[],
+    result: [] as string[],
+    pair: [] as string[],
+    feeling: [] as string[],
     startDate: '',
     endDate: '',
   });
@@ -724,10 +724,15 @@ export default function Home() {
   // FILTERED DATA
   const processedTrades = useMemo(() => {
     return [...trades].filter((t) => {
-      if (filters.session !== 'All' && t.session !== filters.session)
+      if (filters.session.length && !filters.session.includes(t.session))
         return false;
-      if (filters.result !== 'All' && t.result !== filters.result) return false;
-      if (filters.feeling !== 'All' && t.feeling !== filters.feeling)
+
+      if (filters.result.length && !filters.result.includes(t.result))
+        return false;
+
+      if (filters.pair.length && !filters.pair.includes(t.pair)) return false;
+
+      if (filters.feeling.length && !filters.feeling.includes(t.feeling))
         return false;
 
       // ✅ DATE FILTER
@@ -737,6 +742,66 @@ export default function Home() {
       return true;
     });
   }, [trades, filters]);
+
+  const toggleFilter = (
+    key: 'session' | 'result' | 'pair' | 'feeling',
+    value: string
+  ) => {
+    setFilters((prev) => {
+      const exists = prev[key].includes(value);
+
+      return {
+        ...prev,
+        [key]: exists
+          ? prev[key].filter((v) => v !== value)
+          : [...prev[key], value],
+      };
+    });
+  };
+
+  const MultiSelectDropdown = ({
+    label,
+    options,
+    selected,
+    onToggle,
+  }: {
+    label: string;
+    options: string[];
+    selected: string[];
+    onToggle: (value: string) => void;
+  }) => {
+    const [open, setOpen] = useState(false);
+
+    return (
+      <div className="relative w-48">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="border p-2 rounded w-full text-left"
+        >
+          {label}: {selected.length ? selected.join(', ') : 'All'}
+        </button>
+
+        {open && (
+          <div className="absolute z-10 bg-white border mt-1 w-full rounded shadow max-h-48 overflow-auto">
+            {options.map((opt) => (
+              <label
+                key={opt}
+                className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(opt)}
+                  onChange={() => onToggle(opt)}
+                />
+                {opt}
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const sortedTrades = useMemo(() => {
     return [...processedTrades].sort((a, b) => {
@@ -1162,7 +1227,7 @@ export default function Home() {
               <input
                 name="pair"
                 value={pairQuery}
-                placeholder="Pair (e.g. XAUUSD, EURUSD)"
+                placeholder="Pair (e.g. NQ, EURUSD)"
                 onChange={(e) => {
                   setPairQuery(e.target.value);
                   setTrade({ ...trade, pair: e.target.value });
@@ -1264,7 +1329,7 @@ export default function Home() {
 
             {/* CHECKLIST */}
             <div>
-              <h3 className="font-semibold mb-2">Checklist</h3>
+              <h3 className="font-semibold mb-2">AOC Checklist</h3>
 
               <div className="flex flex-col gap-2">
                 {Object.entries({
@@ -1358,62 +1423,41 @@ export default function Home() {
 
         {/* FILTERS */}
         <div className="bg-white p-4 rounded-2xl shadow flex gap-2 flex-wrap">
-          <select
-            onChange={(e) =>
-              setFilters({ ...filters, session: e.target.value })
-            }
-          >
-            <option value="All">All Sessions</option>
-            <option>Asia</option>
-            <option>London</option>
-            <option>NYAM</option>
-            <option>Out of KZ</option>
-          </select>
-
-          <select
-            onChange={(e) => setFilters({ ...filters, result: e.target.value })}
-          >
-            <option value="All">All Results</option>
-            <option>Win</option>
-            <option>Loss</option>
-            <option>Breakeven</option>
-          </select>
-
-          <select
-            onChange={(e) =>
-              setFilters({ ...filters, feeling: e.target.value })
-            }
-          >
-            <option value="All">All Emotions</option>
-            <option>Calm</option>
-            <option>Anxious</option>
-          </select>
-
-          <input
-            type="date"
-            value={filters.startDate}
-            onChange={(e) =>
-              setFilters({ ...filters, startDate: e.target.value })
-            }
-            className="border p-2 rounded"
+          <MultiSelectDropdown
+            label="Session"
+            options={['Asia', 'London', 'NYAM', 'Out of KZ']}
+            selected={filters.session}
+            onToggle={(v) => toggleFilter('session', v)}
           />
 
-          <input
-            type="date"
-            value={filters.endDate}
-            onChange={(e) =>
-              setFilters({ ...filters, endDate: e.target.value })
-            }
-            className="border p-2 rounded"
+          <MultiSelectDropdown
+            label="Result"
+            options={['Win', 'Loss', 'Breakeven']}
+            selected={filters.result}
+            onToggle={(v) => toggleFilter('result', v)}
+          />
+
+          <MultiSelectDropdown
+            label="Pairs"
+            options={pairSuggestions}
+            selected={filters.pair}
+            onToggle={(v) => toggleFilter('pair', v)}
+          />
+
+          <MultiSelectDropdown
+            label="Feeling"
+            options={['Calm', 'Anxious']}
+            selected={filters.feeling}
+            onToggle={(v) => toggleFilter('feeling', v)}
           />
 
           <button
             onClick={() =>
               setFilters({
-                session: 'All',
-                result: 'All',
-                feeling: 'All',
-                minScore: 0,
+                session: [],
+                result: [],
+                pair: [],
+                feeling: [],
                 startDate: '',
                 endDate: '',
               })
@@ -1706,6 +1750,23 @@ export default function Home() {
               ))}
             </div>
           </div>
+          {/* WEEKDAY PERFORMANCE */}
+          <div>
+            <h3 className="font-semibold mb-2">By Day of Week</h3>
+
+            <div className="grid md:grid-cols-4 gap-3 text-sm">
+              {weekdayGroups.map((g) => (
+                <div key={g.label} className="border p-3 rounded-lg">
+                  <p className="font-medium">{g.label}</p>
+                  <p>Trades: {g.stats.trades}</p>
+                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                  <p>PnL: {g.stats.totalPnL}</p>
+                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ===================== */}
@@ -1808,24 +1869,6 @@ export default function Home() {
                 <Bar dataKey="pnl" />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* WEEKDAY PERFORMANCE */}
-        <div>
-          <h3 className="font-semibold mb-2">By Day of Week</h3>
-
-          <div className="grid md:grid-cols-4 gap-3 text-sm">
-            {weekdayGroups.map((g) => (
-              <div key={g.label} className="border p-3 rounded-lg">
-                <p className="font-medium">{g.label}</p>
-                <p>Trades: {g.stats.trades}</p>
-                <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                <p>PnL: {g.stats.totalPnL}</p>
-                <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
-              </div>
-            ))}
           </div>
         </div>
 
