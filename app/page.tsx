@@ -35,6 +35,7 @@ type Trade = {
   session: string;
   direction: string;
   type: string;
+  pair: string;
   result: string;
   risk: string;
   amount: string;
@@ -71,183 +72,182 @@ const emptyChecklist: Checklist = {
 const dummyTrades: Trade[] = [
   {
     date: '2026-04-18',
-    entryTime: '09:10',
-    exitTime: '09:45',
+    entryTime: '09:00',
+    exitTime: '09:30',
     session: 'NYAM',
     direction: 'Buy',
-    type: 'Scalp',
-    result: 'Win',
-    risk: '1%',
-    amount: '240',
-    checklist: emptyChecklist,
-    checklistScore: 9,
-    suggestedRisk: '1%',
-    remarks: 'Clean continuation, no interference',
-    feeling: 'Calm',
-    movedStops: false,
-    movedStopsWorked: null,
-  },
-  {
-    date: '2026-04-17',
-    entryTime: '21:20',
-    exitTime: '21:50',
-    session: 'Asia',
-    direction: 'Sell',
-    type: 'Scalp',
-    result: 'Win',
-    risk: '1%',
-    amount: '160',
-    checklist: emptyChecklist,
-    checklistScore: 7,
-    suggestedRisk: '0.5%',
-    remarks: 'Moved stop, secured partial before continuation',
-    feeling: 'Calm',
-    movedStops: true,
-    movedStopsWorked: 'SUCCESS',
-  },
-  {
-    date: '2026-04-16',
-    entryTime: '08:05',
-    exitTime: '08:40',
-    session: 'NYAM',
-    direction: 'Buy',
+    pair: 'NQ',
     type: 'Day Trade',
     result: 'Loss',
     risk: '1%',
-    amount: '-280',
-    checklist: emptyChecklist,
-    checklistScore: 6,
+    amount: '-200',
+    checklist: {
+      bias: false,
+      timeframeAlignment: false,
+      sessionProfile: true,
+      pdArray: false,
+      cisd: true,
+      strongHL: true,
+      news: true,
+      killzone: false,
+      smt: false,
+    },
+    checklistScore: 4,
     suggestedRisk: '0%',
-    remarks: 'Moved stop too tight, missed TP then reversed',
+    remarks: 'Weak execution',
     feeling: 'Anxious',
     movedStops: true,
-    movedStopsWorked: 'FAIL',
+    movedStopsWorked: 'OVERMANAGED',
   },
+
   {
-    date: '2026-04-15',
-    entryTime: '02:30',
-    exitTime: '03:10',
-    session: 'London',
-    direction: 'Sell',
-    type: 'Scalp',
-    result: 'Win',
-    risk: '0.5%',
-    amount: '120',
-    checklist: emptyChecklist,
-    checklistScore: 7,
-    suggestedRisk: '0.5%',
-    remarks: 'Stop moved but never interacted, straight TP',
-    feeling: 'Calm',
-    movedStops: true,
-    movedStopsWorked: 'NOT_TRIGGERED',
-  },
-  {
-    date: '2026-04-14',
-    entryTime: '10:15',
-    exitTime: '10:40',
+    date: '2026-04-18',
+    entryTime: '10:00',
+    exitTime: '10:25',
     session: 'NYAM',
-    direction: 'Buy',
+    direction: 'Sell',
+    pair: 'EURUSD',
     type: 'Scalp',
     result: 'Loss',
     risk: '1%',
-    amount: '-210',
-    checklist: emptyChecklist,
-    checklistScore: 5,
+    amount: '-120',
+    checklist: {
+      bias: false,
+      timeframeAlignment: true,
+      sessionProfile: false,
+      pdArray: false,
+      cisd: true,
+      strongHL: false,
+      news: false,
+      killzone: false,
+      smt: false,
+    },
+    checklistScore: 3,
     suggestedRisk: '0%',
-    remarks: 'Revenge trade, no management',
+    remarks: 'Choppy entry',
     feeling: 'Anxious',
-    movedStops: false,
-    movedStopsWorked: null,
+    movedStops: true,
+    movedStopsWorked: 'OVERMANAGED',
   },
+
   {
-    date: '2026-04-13',
-    entryTime: '20:35',
-    exitTime: '21:05',
-    session: 'Asia',
+    date: '2026-04-17',
+    entryTime: '03:10',
+    exitTime: '03:40',
+    session: 'London',
     direction: 'Buy',
+    pair: 'EURUSD',
     type: 'Scalp',
     result: 'Win',
-    risk: '1%',
-    amount: '200',
-    checklist: emptyChecklist,
-    checklistScore: 8,
-    suggestedRisk: '1%',
-    remarks: 'Protected downside, still hit TP',
+    risk: '0.5%',
+    amount: '150',
+    checklist: {
+      bias: true,
+      timeframeAlignment: true,
+      sessionProfile: true,
+      pdArray: false,
+      cisd: false,
+      strongHL: true,
+      news: false,
+      killzone: false,
+      smt: true,
+    },
+    checklistScore: 5,
+    suggestedRisk: '0.5%',
+    remarks: 'Good structure but missed PD array',
     feeling: 'Calm',
     movedStops: true,
-    movedStopsWorked: 'SUCCESS',
+    movedStopsWorked: 'PROTECTED',
   },
+
   {
-    date: '2026-04-12',
-    entryTime: '03:50',
-    exitTime: '04:15',
+    date: '2026-04-16',
+    entryTime: '08:45',
+    exitTime: '09:15',
+    session: 'NYAM',
+    direction: 'Sell',
+    pair: 'CL',
+    type: 'Scalp',
+    result: 'Loss',
+    risk: '1%',
+    amount: '-250',
+    checklist: {
+      bias: false,
+      timeframeAlignment: false,
+      sessionProfile: false,
+      pdArray: false,
+      cisd: false,
+      strongHL: false,
+      news: true,
+      killzone: false,
+      smt: false,
+    },
+    checklistScore: 1,
+    suggestedRisk: '0%',
+    remarks: 'Full rule break trade',
+    feeling: 'Anxious',
+    movedStops: true,
+    movedStopsWorked: 'OVERMANAGED',
+  },
+
+  {
+    date: '2026-04-15',
+    entryTime: '21:30',
+    exitTime: '22:00',
+    session: 'Asia',
+    direction: 'Buy',
+    pair: 'BTCUSD',
+    type: 'Day Trade',
+    result: 'Win',
+    risk: '1%',
+    amount: '400',
+    checklist: {
+      bias: true,
+      timeframeAlignment: true,
+      sessionProfile: true,
+      pdArray: true,
+      cisd: true,
+      strongHL: true,
+      news: true,
+      killzone: true,
+      smt: true,
+    },
+    checklistScore: 9,
+    suggestedRisk: '1%',
+    remarks: 'Perfect execution',
+    feeling: 'Calm',
+    movedStops: true,
+    movedStopsWorked: 'PROTECTED',
+  },
+
+  {
+    date: '2026-04-14',
+    entryTime: '02:20',
+    exitTime: '02:50',
     session: 'London',
     direction: 'Sell',
+    pair: 'EURUSD',
     type: 'Scalp',
     result: 'Breakeven',
     risk: '0.5%',
     amount: '0',
-    checklist: emptyChecklist,
-    checklistScore: 7,
+    checklist: {
+      bias: true,
+      timeframeAlignment: false,
+      sessionProfile: true,
+      pdArray: true,
+      cisd: true,
+      strongHL: false,
+      news: false,
+      killzone: false,
+      smt: false,
+    },
+    checklistScore: 4,
     suggestedRisk: '0.5%',
-    remarks: 'Moved to BE, got tagged before move',
+    remarks: 'Early exit, no follow-through',
     feeling: 'Calm',
     movedStops: true,
-    movedStopsWorked: 'FAIL',
-  },
-  {
-    date: '2026-04-11',
-    entryTime: '09:25',
-    exitTime: '09:55',
-    session: 'NYAM',
-    direction: 'Buy',
-    type: 'Scalp',
-    result: 'Win',
-    risk: '1%',
-    amount: '180',
-    checklist: emptyChecklist,
-    checklistScore: 8,
-    suggestedRisk: '1%',
-    remarks: 'No need to manage, clean execution',
-    feeling: 'Calm',
-    movedStops: false,
-    movedStopsWorked: null,
-  },
-  {
-    date: '2026-04-10',
-    entryTime: '21:00',
-    exitTime: '21:40',
-    session: 'Asia',
-    direction: 'Sell',
-    type: 'Day Trade',
-    result: 'Loss',
-    risk: '1%',
-    amount: '-260',
-    checklist: emptyChecklist,
-    checklistScore: 6,
-    suggestedRisk: '0%',
-    remarks: 'Held full SL, no intervention',
-    feeling: 'Anxious',
-    movedStops: false,
-    movedStopsWorked: null,
-  },
-  {
-    date: '2026-04-09',
-    entryTime: '08:20',
-    exitTime: '08:50',
-    session: 'NYAM',
-    direction: 'Buy',
-    type: 'Scalp',
-    result: 'Win',
-    risk: '1%',
-    amount: '220',
-    checklist: emptyChecklist,
-    checklistScore: 9,
-    suggestedRisk: '1%',
-    remarks: 'Moved stop saved trade from reversal',
-    feeling: 'Calm',
-    movedStops: true,
-    movedStopsWorked: 'SUCCESS',
+    movedStopsWorked: 'IRRELEVANT',
   },
 ];
 
@@ -258,6 +258,7 @@ const createDefaultTrade = (): Trade => ({
   session: '',
   direction: 'Buy',
   type: 'Scalp',
+  pair: '',
   result: 'Win',
   risk: '',
   amount: '',
@@ -284,6 +285,54 @@ export default function Home() {
   const [trade, setTrade] = useState<Trade>(createDefaultTrade());
   const [trades, setTrades] = useState<Trade[]>([]);
 
+  // =====================
+  // REUSABLE STATS FUNCTION
+  // =====================
+  const getStats = (data: Trade[]) => {
+    const wins = data.filter((t) => t.result === 'Win');
+    const losses = data.filter((t) => t.result === 'Loss');
+
+    const winCount = wins.length;
+    const lossCount = losses.length;
+    const totalTrades = winCount + lossCount;
+
+    const totalPnL = data.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const avgWin =
+      winCount > 0
+        ? wins.reduce((sum, t) => sum + Number(t.amount), 0) / winCount
+        : 0;
+
+    const avgLoss =
+      lossCount > 0
+        ? losses.reduce((sum, t) => sum + Number(t.amount), 0) / lossCount
+        : 0;
+
+    const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
+
+    const totalWinsAmount = wins.reduce((sum, t) => sum + Number(t.amount), 0);
+
+    const totalLossAmount = Math.abs(
+      losses.reduce((sum, t) => sum + Number(t.amount), 0)
+    );
+
+    const profitFactor =
+      totalLossAmount > 0 ? totalWinsAmount / totalLossAmount : 0;
+
+    const expectancy =
+      totalTrades > 0
+        ? (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss
+        : 0;
+
+    return {
+      trades: data.length,
+      winRate,
+      totalPnL,
+      profitFactor,
+      expectancy,
+    };
+  };
+
   // FILTERS
   const [filters, setFilters] = useState({
     session: 'All',
@@ -303,18 +352,27 @@ export default function Home() {
 
     const saved = localStorage.getItem('trades');
 
-    if (saved) {
+    if (!saved) {
+      setTrades(dummyTrades);
+      return;
+    }
+
+    try {
       const parsed: Trade[] = JSON.parse(saved);
 
-      // REMOVE duplicates safely
-      const uniqueTrades = Array.from(
-        new Map(
-          parsed.map((t) => [`${t.date}-${t.entryTime}-${t.amount}`, t])
-        ).values()
-      );
+      const normalized = parsed.map((t) => ({
+        ...createDefaultTrade(),
+        ...t,
+        movedStopsWorked:
+          t.movedStopsWorked === true
+            ? 'PROTECTED'
+            : t.movedStopsWorked === false
+              ? 'OVERMANAGED'
+              : (t.movedStopsWorked ?? null),
+      }));
 
-      setTrades(uniqueTrades);
-    } else {
+      setTrades(normalized);
+    } catch {
       setTrades(dummyTrades);
     }
   }, []);
@@ -482,15 +540,24 @@ export default function Home() {
     }));
   }, [enrichedTrades]);
 
+  const pairList = useMemo(() => {
+    return Array.from(
+      new Set(displayTrades.map((t) => t.pair).filter(Boolean))
+    );
+  }, [displayTrades]);
+
   const mistakeSummary = useMemo(() => {
-    return displayTrades.reduce(
-      (acc, t) => {
-        t.mistakes.forEach((m) => {
-          acc[m.type] = (acc[m.type] || 0) + 1;
-        });
-        return acc;
-      },
-      {} as Record<string, number>
+    const acc: Record<string, Set<number>> = {};
+
+    displayTrades.forEach((t, idx) => {
+      t.mistakes.forEach((m) => {
+        if (!acc[m.type]) acc[m.type] = new Set();
+        acc[m.type].add(idx); // prevent duplicate counting per trade
+      });
+    });
+
+    return Object.fromEntries(
+      Object.entries(acc).map(([type, set]) => [type, set.size])
     );
   }, [displayTrades]);
 
@@ -503,53 +570,30 @@ export default function Home() {
     }, 0);
   }, [displayTrades]);
 
-  // =====================
-  // REUSABLE STATS FUNCTION
-  // =====================
-  const getStats = (data: Trade[]) => {
-    const wins = data.filter((t) => t.result === 'Win');
-    const losses = data.filter((t) => t.result === 'Loss');
+  const pairSuggestions = useMemo(() => {
+    return Array.from(new Set(trades.map((t) => t.pair).filter(Boolean)));
+  }, [trades]);
 
-    const winCount = wins.length;
-    const lossCount = losses.length;
-    const totalTrades = winCount + lossCount;
+  const pairGroups = useMemo(() => {
+    return pairList.map((pair) => ({
+      label: pair,
+      stats: getStats(displayTrades.filter((t) => t.pair === pair)),
+    }));
+  }, [pairList, displayTrades]);
 
-    const totalPnL = data.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const pairChartData = useMemo(() => {
+    return pairGroups.map((p) => ({
+      name: p.label,
+      pnl: p.stats.totalPnL,
+    }));
+  }, [pairGroups]);
 
-    const avgWin =
-      winCount > 0
-        ? wins.reduce((sum, t) => sum + Number(t.amount), 0) / winCount
-        : 0;
+  const [pairQuery, setPairQuery] = useState('');
+  const [showPairDropdown, setShowPairDropdown] = useState(false);
 
-    const avgLoss =
-      lossCount > 0
-        ? losses.reduce((sum, t) => sum + Number(t.amount), 0) / lossCount
-        : 0;
-
-    const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
-
-    const totalWinsAmount = wins.reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const totalLossAmount = Math.abs(
-      losses.reduce((sum, t) => sum + Number(t.amount), 0)
-    );
-
-    const profitFactor =
-      totalLossAmount > 0 ? totalWinsAmount / totalLossAmount : 0;
-
-    const expectancy =
-      totalTrades > 0
-        ? (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss
-        : 0;
-
-    return {
-      trades: data.length,
-      winRate,
-      totalPnL,
-      profitFactor,
-      expectancy,
-    };
-  };
+  const filteredPairs = pairSuggestions.filter((p) =>
+    p.toLowerCase().includes(pairQuery.toLowerCase())
+  );
 
   // =====================
   // GROUPING
@@ -698,18 +742,20 @@ export default function Home() {
       : 0;
 
   const movedStopsStats = useMemo(() => {
-    const trades = displayTrades.filter((t) => t.movedStops);
+    const trades = displayTrades.filter((t) => t.movedStops === true);
 
-    const total = trades.length;
+    const safeAmount = (v: any) => Number(v || 0);
 
     const successTrades = trades.filter(
-      (t) => t.movedStopsWorked === 'SUCCESS'
+      (t) => t.movedStopsWorked === 'PROTECTED'
     );
 
-    const failTrades = trades.filter((t) => t.movedStopsWorked === 'FAIL');
+    const failTrades = trades.filter(
+      (t) => t.movedStopsWorked === 'OVERMANAGED'
+    );
 
     const neutralTrades = trades.filter(
-      (t) => t.movedStopsWorked === 'NOT_TRIGGERED'
+      (t) => t.movedStopsWorked === 'IRRELEVANT'
     );
 
     const success = successTrades.length;
@@ -717,28 +763,23 @@ export default function Home() {
     const neutral = neutralTrades.length;
 
     const pnlSuccess = successTrades.reduce(
-      (sum, t) => sum + Number(t.amount || 0),
+      (sum, t) => sum + safeAmount(t.amount),
       0
     );
 
     const pnlFail = failTrades.reduce(
-      (sum, t) => sum + Number(t.amount || 0),
+      (sum, t) => sum + safeAmount(t.amount),
       0
     );
 
     const pnlNeutral = neutralTrades.reduce(
-      (sum, t) => sum + Number(t.amount || 0),
+      (sum, t) => sum + safeAmount(t.amount),
       0
     );
 
+    const total = trades.length;
+
     const totalPnL = pnlSuccess + pnlFail + pnlNeutral;
-
-    const quality = total > 0 ? (success / total) * 100 : 0;
-
-    const netImpact = success - fail;
-
-    // 🔥 KEY METRIC
-    const pnlImpact = pnlSuccess + pnlFail; // exclude neutral
 
     return {
       total,
@@ -749,11 +790,29 @@ export default function Home() {
       pnlFail,
       pnlNeutral,
       totalPnL,
-      pnlImpact,
-      quality,
-      netImpact,
+      quality: total ? (success / total) * 100 : 0,
+      netImpact: success - fail,
+      pnlImpact: totalPnL,
     };
   }, [displayTrades]);
+
+  const tradesPerDayMap = useMemo(() => {
+    const map: Record<string, number> = {};
+
+    displayTrades.forEach((t) => {
+      if (!t.date) return;
+      map[t.date] = (map[t.date] || 0) + 1;
+    });
+
+    return map;
+  }, [displayTrades]);
+
+  const avgTradesPerDay = useMemo(() => {
+    const days = Object.keys(tradesPerDayMap).length;
+    const totalTrades = displayTrades.length;
+
+    return days > 0 ? totalTrades / days : 0;
+  }, [displayTrades, tradesPerDayMap]);
 
   // INPUT HANDLER
   const handleChange = (
@@ -824,7 +883,10 @@ export default function Home() {
 
     setTrades((prev) => [...prev, finalTrade]);
     setTrade(createDefaultTrade());
+    setPairQuery('');
   };
+
+  console.log(mistakeSummary);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -864,6 +926,39 @@ export default function Home() {
                 className="border p-2 rounded-lg"
                 required
               />
+            </div>
+
+            <div className="relative">
+              <input
+                name="pair"
+                value={pairQuery}
+                placeholder="Pair (e.g. XAUUSD, EURUSD)"
+                onChange={(e) => {
+                  setPairQuery(e.target.value);
+                  setTrade({ ...trade, pair: e.target.value });
+                  setShowPairDropdown(true);
+                }}
+                onFocus={() => setShowPairDropdown(true)}
+                className="border p-2 rounded-lg w-full"
+              />
+
+              {showPairDropdown && filteredPairs.length > 0 && (
+                <div className="absolute z-10 bg-white border w-full mt-1 rounded shadow max-h-40 overflow-auto">
+                  {filteredPairs.map((p) => (
+                    <div
+                      key={p}
+                      onClick={() => {
+                        setPairQuery(p);
+                        setTrade({ ...trade, pair: p });
+                        setShowPairDropdown(false);
+                      }}
+                      className="p-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {p}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* SESSION DISPLAY */}
@@ -1206,6 +1301,13 @@ export default function Home() {
             </div>
 
             <div className="p-3 border rounded-lg">
+              <p className="text-gray-500">Avg Trades / Day</p>
+              <p className="text-lg font-semibold">
+                {avgTradesPerDay.toFixed(2)}
+              </p>
+            </div>
+
+            <div className="p-3 border rounded-lg">
               <p className="text-gray-500">Moved Stops</p>
 
               <p className="text-lg font-semibold">
@@ -1214,7 +1316,7 @@ export default function Home() {
 
               <p className="text-sm text-green-600">
                 Protected: {movedStopsStats.success} (
-                {movedStopsStats.pnlSuccess})
+                {movedStopsStats.pnlSuccess ?? 0})
               </p>
 
               <p className="text-sm text-red-600">
@@ -1227,7 +1329,7 @@ export default function Home() {
               </p>
 
               <p className="text-sm">
-                Quality: {movedStopsStats.quality.toFixed(1)}%
+                Quality: {(movedStopsStats.quality || 0).toFixed(1)}%
               </p>
 
               <p
@@ -1356,6 +1458,24 @@ export default function Home() {
               ))}
             </div>
           </div>
+
+          {/* PAIR */}
+          <div>
+            <h3 className="font-semibold mb-2">By Pair</h3>
+
+            <div className="grid md:grid-cols-4 gap-3 text-sm">
+              {pairGroups.map((g) => (
+                <div key={g.label} className="border p-3 rounded-lg">
+                  <p className="font-medium">{g.label}</p>
+                  <p>Trades: {g.stats.trades}</p>
+                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                  <p>PnL: {g.stats.totalPnL}</p>
+                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ===================== */}
@@ -1428,6 +1548,21 @@ export default function Home() {
             </ResponsiveContainer>
           </div>
 
+          {/* PAIR */}
+          <div>
+            <h3 className="font-semibold mb-2">PnL by Pair</h3>
+
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={pairChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="pnl" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
           {/* EMOTION */}
           <div>
             <h3 className="font-semibold mb-2">PnL by Emotion</h3>
@@ -1472,6 +1607,7 @@ export default function Home() {
                 <th className="border p-2">Entry</th>
                 <th className="border p-2">Exit</th>
                 <th className="border p-2">Session</th>
+                <th className="border p-2">Pair</th>
                 <th className="border p-2">Direction</th>
                 <th className="border p-2">Type</th>
                 <th className="border p-2">Risk %</th>
@@ -1484,6 +1620,7 @@ export default function Home() {
                 <th className="border p-2">Moved Stops</th>
                 <th className="border p-2">Stop Worked</th>
                 <th className="border p-2">Mistakes</th>
+                <th className="border p-2">Remarks</th>
               </tr>
             </thead>
 
@@ -1495,6 +1632,9 @@ export default function Home() {
                   <td className="border p-2">{t.entryTime}</td>
                   <td className="border p-2">{t.exitTime}</td>
                   <td className="border p-2">{t.session}</td>
+                  <td className="border p-2 font-mono text-blue-600">
+                    {t.pair || '-'}
+                  </td>
                   <td className="border p-2">{t.direction}</td>
                   <td className="border p-2">{t.type}</td>
                   <td className="border p-2">{t.risk}</td>
@@ -1542,15 +1682,15 @@ export default function Home() {
                   <td className="border p-2">
                     {!t.movedStops ? (
                       '-'
-                    ) : t.movedStopsWorked === 'SUCCESS' ? (
+                    ) : String(t.movedStopsWorked) === 'PROTECTED' ? (
                       <span className="text-green-600 font-medium">
                         Protected
                       </span>
-                    ) : t.movedStopsWorked === 'FAIL' ? (
+                    ) : t.movedStopsWorked === 'OVERMANAGED' ? (
                       <span className="text-red-600 font-medium">
-                        Interfered
+                        Overmanaged
                       </span>
-                    ) : t.movedStopsWorked === 'NOT_TRIGGERED' ? (
+                    ) : t.movedStopsWorked === 'IRRELEVANT' ? (
                       <span className="text-gray-500">Neutral</span>
                     ) : (
                       <span className="text-gray-400">-</span>
@@ -1580,6 +1720,9 @@ export default function Home() {
                     ) : (
                       <span className="text-gray-400">-</span>
                     )}
+                  </td>
+                  <td className="border p-2 text-left text-xs">
+                    {t.remarks || '-'}
                   </td>
                 </tr>
               ))}
