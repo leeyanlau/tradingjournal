@@ -29,6 +29,7 @@ type Checklist = {
 type MovedStopResult = 'PROTECTED' | 'OVERMANAGED' | 'IRRELEVANT' | null;
 
 type Trade = {
+  id: string;
   date: string;
   entryTime: string;
   exitTime: string;
@@ -473,6 +474,7 @@ const dummyTrades: Trade[] = [
 ];
 
 const createDefaultTrade = (): Trade => ({
+  id: crypto.randomUUID(),
   date: '',
   entryTime: '',
   exitTime: '',
@@ -505,6 +507,9 @@ const createDefaultTrade = (): Trade => ({
 export default function Home() {
   const [trade, setTrade] = useState<Trade>(createDefaultTrade());
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletedTrade, setDeletedTrade] = useState<Trade | null>(null);
+  const [showUndo, setShowUndo] = useState(false);
 
   // =====================
   // REUSABLE STATS FUNCTION
@@ -584,6 +589,7 @@ export default function Home() {
       const normalized = parsed.map((t) => ({
         ...createDefaultTrade(),
         ...t,
+        id: t.id || crypto.randomUUID(), // 🔥 ensure every trade has id
         movedStopsWorked:
           t.movedStopsWorked === true
             ? 'PROTECTED'
@@ -934,17 +940,47 @@ export default function Home() {
   }, [processedTrades]);
 
   const equityData = equitySource.reduce((acc: any[], t, index) => {
-    const prev = acc[index - 1]?.equity ?? 0;
     const pnl = Number(t.amount || 0);
+
+    const prevEquity = acc[index - 1]?.equity ?? 0;
+    const equity = prevEquity + pnl;
 
     acc.push({
       index: index + 1,
-      equity: prev + pnl,
-      pnl,
+      date: t.date,
+      entryTime: t.entryTime,
+      exitTime: t.exitTime,
+      pnl, // still useful for tooltip
+      equity,
+      pair: t.pair,
+      result: t.result,
     });
 
     return acc;
   }, []);
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    const data = payload[0].payload;
+
+    return (
+      <div className="bg-black text-white p-3 rounded-lg text-xs space-y-1">
+        <p>
+          <b>Trade #{data.index}</b>
+        </p>
+        <p>Date: {data.date}</p>
+        <p>Pair: {data.pair}</p>
+        <p>Result: {data.result}</p>
+
+        <p className={data.pnl >= 0 ? 'text-green-400' : 'text-red-400'}>
+          PnL: {data.pnl}
+        </p>
+
+        <p>Equity: {data.equity}</p>
+      </div>
+    );
+  };
 
   const sessionChartData = sessionGroups.map((s) => ({
     name: s.label,
@@ -1110,6 +1146,65 @@ export default function Home() {
   }, [displayTrades, tradesPerDayMap]);
 
   // INPUT HANDLER
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // 🔒 REQUIRED VALIDATION
+    if (!trade.date) return alert('Date is required');
+    if (!trade.entryTime) return alert('Entry time is required');
+    if (!trade.exitTime) return alert('Exit time is required');
+    if (!trade.pair) return alert('Pair is required');
+    if (!trade.risk) return alert('Risk % is required');
+    if (!trade.amount) return alert('PnL is required');
+
+    if (!trade.session) return alert('Session not detected');
+
+    if (trade.movedStops && !trade.movedStopsWorked) {
+      return alert('Please specify how your stop adjustment performed');
+    }
+
+    // 🔢 VALIDATE NUMBERS
+    const rawAmount = Number(trade.amount);
+    if (isNaN(rawAmount)) return alert('PnL must be a valid number');
+
+    const riskValue = Number((trade.risk || '').replace('%', ''));
+    if (isNaN(riskValue)) {
+      return alert('Risk must be a valid percentage (e.g. 0.5, 1)');
+    }
+
+    // 🔄 NORMALIZE PnL
+    let normalizedAmount = rawAmount;
+
+    if (trade.result === 'Loss') {
+      normalizedAmount = -Math.abs(rawAmount);
+    } else if (trade.result === 'Win') {
+      normalizedAmount = Math.abs(rawAmount);
+    } else if (trade.result === 'Breakeven') {
+      normalizedAmount = 0;
+    }
+
+    // 🆔 FINAL OBJECT
+    const finalTrade = {
+      ...trade,
+      id: editingId || trade.id || crypto.randomUUID(),
+      amount: String(normalizedAmount),
+    };
+
+    // ➕ ADD OR ✏️ EDIT
+    setTrades((prev) => {
+      if (editingId) {
+        return prev.map((t) => (t.id === editingId ? finalTrade : t));
+      }
+
+      return [...prev, finalTrade];
+    });
+
+    // 🔄 RESET FORM
+    setTrade(createDefaultTrade());
+    setPairQuery('');
+    setEditingId(null);
+  };
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -1142,46 +1237,42 @@ export default function Home() {
   };
 
   // SUBMIT
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEdit = (t: Trade) => {
+    setTrade(t);
+    setPairQuery(t.pair);
+    setEditingId(t.id || null);
 
-    if (
-      !trade.date ||
-      !trade.entryTime ||
-      !trade.exitTime ||
-      !trade.amount ||
-      !trade.risk
-    ) {
-      alert('Please fill all required fields');
-      return;
-    }
-
-    const rawAmount = Number(trade.amount || 0);
-
-    let normalizedAmount = rawAmount;
-
-    if (trade.result === 'Loss') {
-      normalizedAmount = -Math.abs(rawAmount);
-    } else if (trade.result === 'Win') {
-      normalizedAmount = Math.abs(rawAmount);
-    }
-
-    // optional: breakeven = 0
-    if (trade.result === 'Breakeven') {
-      normalizedAmount = 0;
-    }
-
-    const finalTrade = {
-      ...trade,
-      amount: String(normalizedAmount),
-    };
-
-    setTrades((prev) => [...prev, finalTrade]);
-    setTrade(createDefaultTrade());
-    setPairQuery('');
+    // optional: scroll to form (nice UX)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  console.log(mistakeSummary);
+  const handleDelete = (id: string) => {
+    const tradeToDelete = trades.find((t) => t.id === id);
+
+    if (!tradeToDelete) return;
+
+    // store for undo
+    setDeletedTrade(tradeToDelete);
+    setShowUndo(true);
+
+    // remove from list
+    setTrades((prev) => prev.filter((t) => t.id !== id));
+
+    // auto-hide undo after 5 seconds
+    setTimeout(() => {
+      setShowUndo(false);
+      setDeletedTrade(null);
+    }, 5000);
+  };
+
+  const handleUndo = () => {
+    if (!deletedTrade) return;
+
+    setTrades((prev) => [...prev, deletedTrade]);
+
+    setDeletedTrade(null);
+    setShowUndo(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -1450,6 +1541,26 @@ export default function Home() {
             selected={filters.feeling}
             onToggle={(v) => toggleFilter('feeling', v)}
           />
+
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+              }
+              className="border p-2 rounded"
+            />
+
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={(e) =>
+                setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+              }
+              className="border p-2 rounded"
+            />
+          </div>
 
           <button
             onClick={() =>
@@ -1785,8 +1896,17 @@ export default function Home() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="index" />
                 <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="equity" stroke="#000" />
+
+                {/* 🔥 CUSTOM TOOLTIP */}
+                <Tooltip content={<CustomTooltip />} />
+
+                {/* ONLY equity line */}
+                <Line
+                  type="monotone"
+                  dataKey="equity"
+                  stroke="#000"
+                  dot={{ r: 3 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1896,6 +2016,7 @@ export default function Home() {
                 <th className="border p-2">Stop Worked</th>
                 <th className="border p-2">Mistakes</th>
                 <th className="border p-2">Remarks</th>
+                <th className="border p-2">Actions</th>
               </tr>
             </thead>
 
@@ -1999,10 +2120,47 @@ export default function Home() {
                   <td className="border p-2 text-left text-xs">
                     {t.remarks || '-'}
                   </td>
+                  <td className="border p-2 space-x-2">
+                    <button
+                      onClick={() => handleEdit(t)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      onClick={() => handleDelete(t.id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {showUndo && deletedTrade && (
+            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow flex items-center gap-4 z-50">
+              <span>Trade deleted</span>
+
+              <button
+                onClick={handleUndo}
+                className="text-green-400 font-semibold hover:underline"
+              >
+                Undo
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowUndo(false);
+                  setDeletedTrade(null);
+                }}
+                className="text-gray-400 hover:underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
