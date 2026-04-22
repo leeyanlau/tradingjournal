@@ -611,7 +611,7 @@ const dummyTrades: Trade[] = [
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
   },
-  
+
   {
     id: crypto.randomUUID(),
     date: '2026-04-02',
@@ -672,7 +672,7 @@ const dummyTrades: Trade[] = [
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
   },
-  ];
+];
 
 const createDefaultTrade = (): Trade => ({
   id: crypto.randomUUID(),
@@ -704,8 +704,6 @@ const createDefaultTrade = (): Trade => ({
   movedStops: false,
   movedStopsWorked: null,
 });
-
-
 
 export default function Home() {
   const [trade, setTrade] = useState<Trade>(createDefaultTrade());
@@ -793,12 +791,7 @@ export default function Home() {
         ...createDefaultTrade(),
         ...t,
         id: t.id || crypto.randomUUID(), // 🔥 ensure every trade has id
-        movedStopsWorked:
-          t.movedStopsWorked === true
-            ? 'PROTECTED'
-            : t.movedStopsWorked === false
-              ? 'OVERMANAGED'
-              : (t.movedStopsWorked ?? null),
+        movedStopsWorked: t.movedStopsWorked ?? null,
       }));
 
       setTrades(normalized);
