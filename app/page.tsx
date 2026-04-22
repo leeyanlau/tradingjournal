@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTradeStats } from '../hooks/useTradeStats';
 
 import {
   LineChart,
@@ -611,7 +612,7 @@ const dummyTrades: Trade[] = [
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
   },
-  
+
   {
     id: crypto.randomUUID(),
     date: '2026-04-02',
@@ -672,7 +673,7 @@ const dummyTrades: Trade[] = [
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
   },
-  ];
+];
 
 const createDefaultTrade = (): Trade => ({
   id: crypto.randomUUID(),
@@ -704,8 +705,6 @@ const createDefaultTrade = (): Trade => ({
   movedStops: false,
   movedStopsWorked: null,
 });
-
-
 
 export default function Home() {
   const [trade, setTrade] = useState<Trade>(createDefaultTrade());
@@ -1224,30 +1223,22 @@ export default function Home() {
   // =====================
   // ANALYTICS
   // =====================
-  const wins = displayTrades.filter((t) => t.result === 'Win');
-  const losses = displayTrades.filter((t) => t.result === 'Loss');
+  const {
+    winRate,
+    totalPnL,
+    avgWin,
+    avgLoss,
+    profitFactor,
+    expectancy,
+
+    winCount,
+    lossCount,
+
+    totalWinsAmount,
+    totalLossAmount,
+  } = useTradeStats(displayTrades);
+
   const breakevens = displayTrades.filter((t) => t.result === 'Breakeven');
-
-  const winCount = wins.length;
-  const lossCount = losses.length;
-  const totalTrades = winCount + lossCount; // exclude BE
-
-  const totalPnL = displayTrades.reduce(
-    (sum, t) => sum + Number(t.amount || 0),
-    0
-  );
-
-  const avgWin =
-    winCount > 0
-      ? wins.reduce((sum, t) => sum + Number(t.amount), 0) / winCount
-      : 0;
-
-  const avgLoss =
-    lossCount > 0
-      ? losses.reduce((sum, t) => sum + Number(t.amount), 0) / lossCount
-      : 0;
-
-  const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
 
   const weekdayChartData = weekdayGroups.map((d) => ({
     name: d.label,
@@ -1260,21 +1251,6 @@ export default function Home() {
   }));
 
   // Profit Factor = total wins / total losses (absolute)
-  const totalWinsAmount = wins.reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const totalLossAmount = Math.abs(
-    losses.reduce((sum, t) => sum + Number(t.amount), 0)
-  );
-
-  const profitFactor =
-    totalLossAmount > 0 ? totalWinsAmount / totalLossAmount : 0;
-
-  // Expectancy
-  const expectancy =
-    totalTrades > 0
-      ? (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss
-      : 0;
-
   const movedStopsStats = useMemo(() => {
     const trades = displayTrades.filter((t) => t.movedStops === true);
 
