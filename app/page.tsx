@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useTradeStats } from '../hooks/useTradeStats';
-import { useTradeGroups } from '../hooks/useTradeGroups';
-import { useTradeCharts } from '../hooks/useTradeCharts';
-import { getStats } from '../utils/getStats';
+import { useTradeStats } from '@/hooks/useTradeStats';
+import { useTradeGroups } from '@/hooks/useTradeGroups';
+import { useTradeCharts } from '@/hooks/useTradeCharts';
+import { Trade } from '@/types/trade';
+import { getTradeStats } from '@/lib/analytics/tradeAnalytics';
 
 import {
   LineChart,
@@ -28,29 +29,6 @@ type Checklist = {
   news: boolean;
   killzone: boolean;
   smt: boolean;
-};
-
-type MovedStopResult = 'PROTECTED' | 'OVERMANAGED' | 'IRRELEVANT' | null;
-
-type Trade = {
-  id: string;
-  date: string;
-  entryTime: string;
-  exitTime: string;
-  session: string;
-  direction: string;
-  type: string;
-  pair: string;
-  result: string;
-  risk: string;
-  amount: string;
-  checklist: Checklist;
-  checklistScore: number;
-  suggestedRisk: string;
-  remarks: string;
-  feeling: string;
-  movedStops: boolean;
-  movedStopsWorked: MovedStopResult;
 };
 
 type Mistake = {
@@ -1026,7 +1004,7 @@ export default function Home() {
   const pairGroups = useMemo(() => {
     return pairList.map((pair) => ({
       label: pair,
-      stats: getStats(displayTrades.filter((t) => t.pair === pair)),
+      stats: getTradeStats(displayTrades.filter((t) => t.pair === pair)),
     }));
   }, [pairList, displayTrades]);
 
