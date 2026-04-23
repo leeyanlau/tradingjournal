@@ -1,6 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTradeStats } from '@/hooks/useTradeStats';
+import { useTradeGroups } from '@/hooks/useTradeGroups';
+import { useTradeCharts } from '@/hooks/useTradeCharts';
+import { Trade, MovedStopResult } from '@/types/trade';
+import { getTradeStats } from '@/lib/analytics/tradeAnalytics';
 
 import {
   LineChart,
@@ -24,29 +29,6 @@ type Checklist = {
   news: boolean;
   killzone: boolean;
   smt: boolean;
-};
-
-type MovedStopResult = 'PROTECTED' | 'OVERMANAGED' | 'IRRELEVANT' | null;
-
-type Trade = {
-  id: string;
-  date: string;
-  entryTime: string;
-  exitTime: string;
-  session: string;
-  direction: string;
-  type: string;
-  pair: string;
-  result: string;
-  risk: string;
-  amount: string;
-  checklist: Checklist;
-  checklistScore: number;
-  suggestedRisk: string;
-  remarks: string;
-  feeling: string;
-  movedStops: boolean;
-  movedStopsWorked: MovedStopResult;
 };
 
 type Mistake = {
@@ -712,54 +694,6 @@ export default function Home() {
   const [deletedTrade, setDeletedTrade] = useState<Trade | null>(null);
   const [showUndo, setShowUndo] = useState(false);
 
-  // =====================
-  // REUSABLE STATS FUNCTION
-  // =====================
-  const getStats = (data: Trade[]) => {
-    const wins = data.filter((t) => t.result === 'Win');
-    const losses = data.filter((t) => t.result === 'Loss');
-
-    const winCount = wins.length;
-    const lossCount = losses.length;
-    const totalTrades = winCount + lossCount;
-
-    const totalPnL = data.reduce((sum, t) => sum + Number(t.amount || 0), 0);
-
-    const avgWin =
-      winCount > 0
-        ? wins.reduce((sum, t) => sum + Number(t.amount), 0) / winCount
-        : 0;
-
-    const avgLoss =
-      lossCount > 0
-        ? losses.reduce((sum, t) => sum + Number(t.amount), 0) / lossCount
-        : 0;
-
-    const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
-
-    const totalWinsAmount = wins.reduce((sum, t) => sum + Number(t.amount), 0);
-
-    const totalLossAmount = Math.abs(
-      losses.reduce((sum, t) => sum + Number(t.amount), 0)
-    );
-
-    const profitFactor =
-      totalLossAmount > 0 ? totalWinsAmount / totalLossAmount : 0;
-
-    const expectancy =
-      totalTrades > 0
-        ? (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss
-        : 0;
-
-    return {
-      trades: data.length,
-      winRate,
-      totalPnL,
-      profitFactor,
-      expectancy,
-    };
-  };
-
   // FILTERS
   const [filters, setFilters] = useState({
     session: [] as string[],
@@ -1065,24 +999,8 @@ export default function Home() {
   const pairGroups = useMemo(() => {
     return pairList.map((pair) => ({
       label: pair,
-      stats: getStats(displayTrades.filter((t) => t.pair === pair)),
+      stats: getTradeStats(displayTrades.filter((t) => t.pair === pair)),
     }));
-  }, [pairList, displayTrades]);
-
-  const pairChartData = useMemo(() => {
-    return pairList.map((pair) => {
-      const trades = displayTrades.filter((t) => t.pair === pair);
-
-      const wins = trades.filter((t) => t.result === 'Win').length;
-      const total = trades.filter((t) => t.result !== 'Breakeven').length;
-
-      const winRate = total > 0 ? (wins / total) * 100 : 0;
-
-      return {
-        name: pair,
-        winRate,
-      };
-    });
   }, [pairList, displayTrades]);
 
   const [pairQuery, setPairQuery] = useState('');
@@ -1091,40 +1009,6 @@ export default function Home() {
   const filteredPairs = pairSuggestions.filter((p) =>
     p.toLowerCase().includes(pairQuery.toLowerCase())
   );
-
-  // =====================
-  // GROUPING
-  // =====================
-
-  // By Session
-  const sessionGroups = ['Asia', 'London', 'NYAM', 'Out of KZ'].map(
-    (session) => ({
-      label: session,
-      stats: getStats(displayTrades.filter((t) => t.session === session)),
-    })
-  );
-
-  // By Emotion
-  const emotionGroups = ['Calm', 'Anxious'].map((feeling) => ({
-    label: feeling,
-    stats: getStats(displayTrades.filter((t) => t.feeling === feeling)),
-  }));
-
-  // By Checklist Score
-  const scoreGroups = [
-    {
-      label: 'High (8-9)',
-      stats: getStats(displayTrades.filter((t) => t.checklistScore >= 8)),
-    },
-    {
-      label: 'Mid (7)',
-      stats: getStats(displayTrades.filter((t) => t.checklistScore === 7)),
-    },
-    {
-      label: 'Low (≤6)',
-      stats: getStats(displayTrades.filter((t) => t.checklistScore <= 6)),
-    },
-  ];
 
   const equitySource = useMemo(() => {
     return [...processedTrades].sort((a, b) => {
@@ -1178,96 +1062,53 @@ export default function Home() {
     );
   };
 
-  const sessionChartData = sessionGroups.map((s) => ({
-    name: s.label,
-    pnl: s.stats.totalPnL,
-  }));
+  // =====================
+  // Grouping
+  // =====================
+  const {
+    sessionGroups,
+    weekdayGroups,
+    emotionGroups,
+    scoreGroups,
+    typeGroups,
+  } = useTradeGroups(displayTrades);
 
-  const emotionChartData = emotionGroups.map((e) => ({
-    name: e.label,
-    pnl: e.stats.totalPnL,
-  }));
-
-  const weekdayNames = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-  ];
-
-  const getWeekday = (dateStr: string) => {
-    if (!dateStr) return 'Unknown';
-    const date = new Date(dateStr);
-    return weekdayNames[date.getDay()];
-  };
-
-  const weekdayGroups = weekdayNames.map((day) => ({
-    label: day,
-    stats: getStats(displayTrades.filter((t) => getWeekday(t.date) === day)),
-  }));
-
-  const typeGroups = ['Scalp', 'Day Trade', 'Swing'].map((type) => ({
-    label: type,
-    stats: getStats(displayTrades.filter((t) => t.type === type)),
-  }));
+  const {
+    sessionChartData,
+    weekdayChartData,
+    emotionChartData,
+    typeChartData,
+    pairChartData,
+  } = useTradeCharts(
+    displayTrades,
+    sessionGroups,
+    weekdayGroups,
+    emotionGroups,
+    typeGroups,
+    pairGroups
+  );
 
   // =====================
   // ANALYTICS
   // =====================
-  const wins = displayTrades.filter((t) => t.result === 'Win');
-  const losses = displayTrades.filter((t) => t.result === 'Loss');
+  const {
+    winRate,
+    totalPnL,
+    avgWin,
+    avgLoss,
+    profitFactor,
+    expectancy,
+
+    winCount,
+    lossCount,
+
+    totalWinsAmount,
+    totalLossAmount,
+  } = useTradeStats(displayTrades);
+
   const breakevens = displayTrades.filter((t) => t.result === 'Breakeven');
 
-  const winCount = wins.length;
-  const lossCount = losses.length;
-  const totalTrades = winCount + lossCount; // exclude BE
-
-  const totalPnL = displayTrades.reduce(
-    (sum, t) => sum + Number(t.amount || 0),
-    0
-  );
-
-  const avgWin =
-    winCount > 0
-      ? wins.reduce((sum, t) => sum + Number(t.amount), 0) / winCount
-      : 0;
-
-  const avgLoss =
-    lossCount > 0
-      ? losses.reduce((sum, t) => sum + Number(t.amount), 0) / lossCount
-      : 0;
-
-  const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
-
-  const weekdayChartData = weekdayGroups.map((d) => ({
-    name: d.label,
-    pnl: d.stats.totalPnL,
-  }));
-
-  const typeChartData = typeGroups.map((t) => ({
-    name: t.label,
-    pnl: t.stats.totalPnL,
-  }));
-
   // Profit Factor = total wins / total losses (absolute)
-  const totalWinsAmount = wins.reduce((sum, t) => sum + Number(t.amount), 0);
-
-  const totalLossAmount = Math.abs(
-    losses.reduce((sum, t) => sum + Number(t.amount), 0)
-  );
-
-  const profitFactor =
-    totalLossAmount > 0 ? totalWinsAmount / totalLossAmount : 0;
-
-  // Expectancy
-  const expectancy =
-    totalTrades > 0
-      ? (winRate / 100) * avgWin + ((100 - winRate) / 100) * avgLoss
-      : 0;
-
   const movedStopsStats = useMemo(() => {
     const trades = displayTrades.filter((t) => t.movedStops === true);
 
