@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTradeStats } from '@/hooks/useTradeStats';
 import { useTradeGroups } from '@/hooks/useTradeGroups';
 import { useTradeCharts } from '@/hooks/useTradeCharts';
-import { Trade } from '@/types/trade';
+import { Trade, MovedStopResult } from '@/types/trade';
 import { getTradeStats } from '@/lib/analytics/tradeAnalytics';
 
 import {
@@ -725,12 +725,7 @@ export default function Home() {
         ...createDefaultTrade(),
         ...t,
         id: t.id || crypto.randomUUID(), // 🔥 ensure every trade has id
-        movedStopsWorked:
-          t.movedStopsWorked === true
-            ? 'PROTECTED'
-            : t.movedStopsWorked === false
-              ? 'OVERMANAGED'
-              : (t.movedStopsWorked ?? null),
+        movedStopsWorked: t.movedStopsWorked ?? null,
       }));
 
       setTrades(normalized);

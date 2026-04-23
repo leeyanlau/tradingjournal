@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { getTradeStats } from '@/lib/analytics/tradeAnalytics';
 import { buildGroupedStats } from '@/lib/analytics/grouping';
+import { Trade } from '@/types/trade';
 
 export const useTradeGroups = (trades: Trade[]) => {
   return useMemo(() => {

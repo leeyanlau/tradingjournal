@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Trade } from '@/types/trade';
 
 export const useTradeStats = (trades: Trade[]) => {
   return useMemo(() => {

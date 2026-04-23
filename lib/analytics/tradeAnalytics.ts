@@ -1,4 +1,4 @@
-import { Trade } from '../types/trade';
+import { Trade } from '@/types/trade';
 
 export const getTradeStats = (trades: Trade[]) => {
   const validTrades = trades.filter((t) => t.result !== 'Breakeven');

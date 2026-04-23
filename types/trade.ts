@@ -20,3 +20,15 @@ export type Trade = {
   movedStops: boolean;
   movedStopsWorked: MovedStopResult;
 };
+
+export type Checklist = {
+  bias: boolean;
+  timeframeAlignment: boolean;
+  sessionProfile: boolean;
+  pdArray: boolean;
+  cisd: boolean;
+  strongHL: boolean;
+  news: boolean;
+  killzone: boolean;
+  smt: boolean;
+};
