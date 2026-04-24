@@ -1,12 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useTradeStats } from '@/hooks/useTradeStats';
-import { useTradeGroups } from '@/hooks/useTradeGroups';
-import { useTradeCharts } from '@/hooks/useTradeCharts';
 import { Trade, MovedStopResult } from '@/types/trade';
 import { getTradeStats } from '@/lib/analytics/tradeAnalytics';
-import { useTradeAnalytics } from '@/hooks/useTradeAnalytics';
+import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 
 import {
   LineChart,
@@ -784,82 +781,38 @@ export default function Home() {
     smt: { type: 'No SMT confirmation', severity: 'low' },
   };
 
-  // DETECT MISTAKES
-  const detectMistakes = (t: Trade): Mistake[] => {
-    const mistakes: Mistake[] = [];
+  const {
+    enrichedTrades,
 
-    // ===== CHECKLIST (ONLY penalize on losses) =====
-    if (t.result === 'Loss') {
-      (Object.keys(checklistRules) as (keyof Checklist)[]).forEach((key) => {
-        if (!t.checklist[key]) {
-          const rule = checklistRules[key];
+    winRate,
+    totalPnL,
+    avgWin,
+    avgLoss,
+    profitFactor,
+    expectancy,
+    avgTradesPerDay,
 
-          mistakes.push({
-            type: rule.type,
-            severity: rule.severity,
-            category: 'checklist',
-          });
-        }
-      });
-    }
+    movedStopsStats,
+    mistakeSummary,
+    mistakeCost,
 
-    // ===== QUALITY =====
-    if (t.checklistScore <= 6) {
-      mistakes.push({
-        type: 'Low score trade',
-        severity: 'high',
-        category: 'behavioral',
-      });
-    }
+    equityData,
 
-    if (t.result === 'Loss' && t.checklistScore <= 7) {
-      mistakes.push({
-        type: 'Low quality loss',
-        severity: 'medium',
-        category: 'behavioral',
-      });
-    }
+    sessionGroups,
+    typeGroups,
+    emotionGroups,
+    scoreGroups,
+    pairGroups,
+    weekdayGroups,
 
-    // ===== BEHAVIOR =====
-    if (t.feeling === 'Anxious') {
-      mistakes.push({
-        type: 'Emotional trading (anxious)',
-        severity: 'medium',
-        category: 'behavioral',
-      });
-    }
+    weekdayChartData,
+    typeChartData,
+    sessionChartData,
+    pairChartData,
+    emotionChartData,
 
-    if (t.movedStops && t.movedStopsWorked === 'OVERMANAGED') {
-      mistakes.push({
-        type: 'Over-tightened stop (missed TP)',
-        severity: 'medium',
-        category: 'behavioral',
-      });
-    }
-
-    const riskValue = Number((t.risk || '').replace('%', ''));
-
-    if (riskValue > 1) {
-      mistakes.push({
-        type: 'Over risk (>1%)',
-        severity: 'high',
-        category: 'behavioral',
-      });
-    }
-
-    if (t.session === 'Out of KZ') {
-      mistakes.push({
-        type: 'Outside session',
-        severity: 'medium',
-        category: 'behavioral',
-      });
-    }
-
-    return mistakes;
-  };
-
-  const { enrichedTrades, sortedTrades, displayTrades, stats, typeGroups } =
-    useTradeAnalytics(trades);
+    pairSuggestions,
+  } = useTradeAnalyticsV2(trades);
 
   // FILTERED DATA
   /* const processedTrades = useMemo(() => {
@@ -943,70 +896,6 @@ export default function Home() {
     );
   };
 
-  /* const sortedTrades = useMemo(() => {
-    return [...processedTrades].sort((a, b) => {
-      return (
-        new Date(`${b.date}T${b.entryTime}`).getTime() -
-        new Date(`${a.date}T${a.entryTime}`).getTime()
-      );
-    });
-  }, [processedTrades]); 
-
-  const enrichedTrades = useMemo(() => {
-    return sortedTrades.map((t) => ({
-      ...t,
-      mistakes: detectMistakes(t),
-    }));
-  }, [sortedTrades]);
-
-  const displayTrades = useMemo(() => {
-    return enrichedTrades.map((t, index) => ({
-      ...t,
-      tradeNo: enrichedTrades.length - index, // newest = highest number
-    }));
-  }, [enrichedTrades]); */
-
-  const pairList = useMemo(() => {
-    return Array.from(
-      new Set(displayTrades.map((t) => t.pair).filter(Boolean))
-    );
-  }, [displayTrades]);
-
-  const mistakeSummary = useMemo(() => {
-    const acc: Record<string, Set<number>> = {};
-
-    displayTrades.forEach((t, idx) => {
-      t.mistakes.forEach((m) => {
-        if (!acc[m.type]) acc[m.type] = new Set();
-        acc[m.type].add(idx); // prevent duplicate counting per trade
-      });
-    });
-
-    return Object.fromEntries(
-      Object.entries(acc).map(([type, set]) => [type, set.size])
-    );
-  }, [displayTrades]);
-
-  const mistakeCost = useMemo(() => {
-    return displayTrades.reduce((sum, t) => {
-      if (t.result === 'Loss' && t.mistakes.length > 0) {
-        return sum + Math.abs(Number(t.amount || 0));
-      }
-      return sum;
-    }, 0);
-  }, [displayTrades]);
-
-  const pairSuggestions = useMemo(() => {
-    return Array.from(new Set(trades.map((t) => t.pair).filter(Boolean)));
-  }, [trades]);
-
-  const pairGroups = useMemo(() => {
-    return pairList.map((pair) => ({
-      label: pair,
-      stats: getTradeStats(displayTrades.filter((t) => t.pair === pair)),
-    }));
-  }, [pairList, displayTrades]);
-
   const [pairQuery, setPairQuery] = useState('');
   const [showPairDropdown, setShowPairDropdown] = useState(false);
 
@@ -1022,26 +911,6 @@ export default function Home() {
       );
     });
   }, [enrichedTrades]);
-
-  const equityData = equitySource.reduce((acc: any[], t, index) => {
-    const pnl = Number(t.amount || 0);
-
-    const prevEquity = acc[index - 1]?.equity ?? 0;
-    const equity = prevEquity + pnl;
-
-    acc.push({
-      index: index + 1,
-      date: t.date,
-      entryTime: t.entryTime,
-      exitTime: t.exitTime,
-      pnl, // still useful for tooltip
-      equity,
-      pair: t.pair,
-      result: t.result,
-    });
-
-    return acc;
-  }, []);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
@@ -1066,7 +935,7 @@ export default function Home() {
     );
   };
 
-  // =====================
+  /* // =====================
   // Grouping
   // =====================
   const { sessionGroups, weekdayGroups, emotionGroups, scoreGroups } =
@@ -1085,7 +954,7 @@ export default function Home() {
     emotionGroups,
     typeGroups,
     pairGroups
-  );
+  ); 
 
   // =====================
   // ANALYTICS
@@ -1103,83 +972,20 @@ export default function Home() {
 
     totalWinsAmount,
     totalLossAmount,
-  } = useTradeStats(displayTrades);
+  } = useTradeStats(enrichedTrades); */
 
-  const breakevens = displayTrades.filter((t) => t.result === 'Breakeven');
-
-  // Profit Factor = total wins / total losses (absolute)
-  const movedStopsStats = useMemo(() => {
-    const trades = displayTrades.filter((t) => t.movedStops === true);
-
-    const safeAmount = (v: any) => Number(v || 0);
-
-    const successTrades = trades.filter(
-      (t) => t.movedStopsWorked === 'PROTECTED'
-    );
-
-    const failTrades = trades.filter(
-      (t) => t.movedStopsWorked === 'OVERMANAGED'
-    );
-
-    const neutralTrades = trades.filter(
-      (t) => t.movedStopsWorked === 'IRRELEVANT'
-    );
-
-    const success = successTrades.length;
-    const fail = failTrades.length;
-    const neutral = neutralTrades.length;
-
-    const pnlSuccess = successTrades.reduce(
-      (sum, t) => sum + safeAmount(t.amount),
-      0
-    );
-
-    const pnlFail = failTrades.reduce(
-      (sum, t) => sum + safeAmount(t.amount),
-      0
-    );
-
-    const pnlNeutral = neutralTrades.reduce(
-      (sum, t) => sum + safeAmount(t.amount),
-      0
-    );
-
-    const total = trades.length;
-
-    const totalPnL = pnlSuccess + pnlFail + pnlNeutral;
-
-    return {
-      total,
-      success,
-      fail,
-      neutral,
-      pnlSuccess,
-      pnlFail,
-      pnlNeutral,
-      totalPnL,
-      quality: total ? (success / total) * 100 : 0,
-      netImpact: success - fail,
-      pnlImpact: totalPnL,
-    };
-  }, [displayTrades]);
+  const breakevens = enrichedTrades.filter((t) => t.result === 'Breakeven');
 
   const tradesPerDayMap = useMemo(() => {
     const map: Record<string, number> = {};
 
-    displayTrades.forEach((t) => {
+    enrichedTrades.forEach((t) => {
       if (!t.date) return;
       map[t.date] = (map[t.date] || 0) + 1;
     });
 
     return map;
-  }, [displayTrades]);
-
-  const avgTradesPerDay = useMemo(() => {
-    const days = Object.keys(tradesPerDayMap).length;
-    const totalTrades = displayTrades.length;
-
-    return days > 0 ? totalTrades / days : 0;
-  }, [displayTrades, tradesPerDayMap]);
+  }, [enrichedTrades]);
 
   // INPUT HANDLER
   const handleSubmit = (e: React.FormEvent) => {
@@ -2057,7 +1863,7 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {displayTrades.map((t, i) => (
+              {enrichedTrades.map((t, i) => (
                 <tr key={i} className="text-center">
                   <td className="border p-2 font-semibold">{t.tradeNo}</td>
                   <td className="border p-2">{t.date}</td>
@@ -2129,10 +1935,11 @@ export default function Home() {
                     )}
                   </td>
                   <td className="border p-2 text-xs text-left">
-                    {t.mistakes.filter((m) => m.category === 'behavioral')
-                      .length > 0 ? (
+                    {(t.mistakes ?? []).filter(
+                      (m) => m.category === 'behavioral'
+                    ).length > 0 ? (
                       <div className="space-y-1 text-left">
-                        {t.mistakes
+                        {(t.mistakes ?? [])
                           .filter((m) => m.category === 'behavioral')
                           .map((m, i) => (
                             <div
