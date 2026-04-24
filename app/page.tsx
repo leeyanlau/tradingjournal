@@ -781,6 +781,7 @@ export default function Home() {
     smt: { type: 'No SMT confirmation', severity: 'low' },
   };
 
+  const analytics = useTradeAnalyticsV2(trades);
   const {
     enrichedTrades,
 
@@ -812,29 +813,40 @@ export default function Home() {
     emotionChartData,
 
     pairSuggestions,
-  } = useTradeAnalyticsV2(trades);
+  } = analytics;
 
-  // FILTERED DATA
-  /* const processedTrades = useMemo(() => {
-    return [...trades].filter((t) => {
-      if (filters.session.length && !filters.session.includes(t.session))
-        return false;
+  const filteredTrades = useMemo(() => {
+    return enrichedTrades.filter((t) => {
+      const sessionMatch =
+        filters.session.length === 0 || filters.session.includes(t.session);
 
-      if (filters.result.length && !filters.result.includes(t.result))
-        return false;
+      const resultMatch =
+        filters.result.length === 0 || filters.result.includes(t.result);
 
-      if (filters.pair.length && !filters.pair.includes(t.pair)) return false;
+      const pairMatch =
+        filters.pair.length === 0 || filters.pair.includes(t.pair);
 
-      if (filters.feeling.length && !filters.feeling.includes(t.feeling))
-        return false;
+      const feelingMatch =
+        filters.feeling.length === 0 || filters.feeling.includes(t.feeling);
 
-      // ✅ DATE FILTER
-      if (filters.startDate && t.date < filters.startDate) return false;
-      if (filters.endDate && t.date > filters.endDate) return false;
+      const startMatch = filters.startDate
+        ? new Date(t.date) >= new Date(filters.startDate)
+        : true;
 
-      return true;
+      const endMatch = filters.endDate
+        ? new Date(t.date) <= new Date(filters.endDate)
+        : true;
+
+      return (
+        sessionMatch &&
+        resultMatch &&
+        pairMatch &&
+        feelingMatch &&
+        startMatch &&
+        endMatch
+      );
     });
-  }, [trades, filters]); */
+  }, [enrichedTrades, filters]);
 
   const toggleFilter = (
     key: 'session' | 'result' | 'pair' | 'feeling',
@@ -904,13 +916,13 @@ export default function Home() {
   );
 
   const equitySource = useMemo(() => {
-    return [...enrichedTrades].sort((a, b) => {
+    return [...filteredTrades].sort((a, b) => {
       return (
         new Date(`${a.date}T${a.entryTime}`).getTime() -
         new Date(`${b.date}T${b.entryTime}`).getTime()
       );
     });
-  }, [enrichedTrades]);
+  }, [filteredTrades]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
@@ -935,57 +947,18 @@ export default function Home() {
     );
   };
 
-  /* // =====================
-  // Grouping
-  // =====================
-  const { sessionGroups, weekdayGroups, emotionGroups, scoreGroups } =
-    useTradeGroups(displayTrades);
-
-  const {
-    sessionChartData,
-    weekdayChartData,
-    emotionChartData,
-    typeChartData,
-    pairChartData,
-  } = useTradeCharts(
-    displayTrades,
-    sessionGroups,
-    weekdayGroups,
-    emotionGroups,
-    typeGroups,
-    pairGroups
-  ); 
-
-  // =====================
-  // ANALYTICS
-  // =====================
-  const {
-    winRate,
-    totalPnL,
-    avgWin,
-    avgLoss,
-    profitFactor,
-    expectancy,
-
-    winCount,
-    lossCount,
-
-    totalWinsAmount,
-    totalLossAmount,
-  } = useTradeStats(enrichedTrades); */
-
-  const breakevens = enrichedTrades.filter((t) => t.result === 'Breakeven');
+  const breakevens = filteredTrades.filter((t) => t.result === 'Breakeven');
 
   const tradesPerDayMap = useMemo(() => {
     const map: Record<string, number> = {};
 
-    enrichedTrades.forEach((t) => {
+    filteredTrades.forEach((t) => {
       if (!t.date) return;
       map[t.date] = (map[t.date] || 0) + 1;
     });
 
     return map;
-  }, [enrichedTrades]);
+  }, [filteredTrades]);
 
   // INPUT HANDLER
   const handleSubmit = (e: React.FormEvent) => {
@@ -1863,7 +1836,7 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {enrichedTrades.map((t, i) => (
+              {filteredTrades.map((t, i) => (
                 <tr key={i} className="text-center">
                   <td className="border p-2 font-semibold">{t.tradeNo}</td>
                   <td className="border p-2">{t.date}</td>
