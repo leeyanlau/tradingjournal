@@ -781,7 +781,7 @@ export default function Home() {
     smt: { type: 'No SMT confirmation', severity: 'low' },
   };
 
-  const analytics = useTradeAnalyticsV2(trades);
+  const analytics = useTradeAnalyticsV2(trades, filters);
   const {
     enrichedTrades,
 

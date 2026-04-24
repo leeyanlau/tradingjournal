@@ -333,6 +333,10 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     avgWin: stats.avgWin,
     avgLoss: stats.avgLoss,
 
+    pairSuggestions: Array.from(
+      new Set(enrichedTrades.map((t) => t.pair).filter(Boolean))
+    ),
+
     profitFactor,
     expectancy,
     avgTradesPerDay,

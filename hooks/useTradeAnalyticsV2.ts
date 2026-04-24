@@ -6,19 +6,21 @@ export const useTradeAnalyticsV2 = (trades: Trade[]) => {
   return useMemo(() => {
     const analytics = buildTradeAnalytics(trades);
 
+    const safeNumber = (v: any) => (typeof v === 'number' && !isNaN(v) ? v : 0);
+
     return {
       ...analytics,
 
       // HARD GUARANTEE: prevent undefined crash cascade
       enrichedTrades: analytics.enrichedTrades ?? [],
 
-      winRate: analytics.winRate ?? 0,
-      totalPnL: analytics.totalPnL ?? 0,
-      avgWin: analytics.avgWin ?? 0,
-      avgLoss: analytics.avgLoss ?? 0,
-      profitFactor: analytics.profitFactor ?? 0,
-      expectancy: analytics.expectancy ?? 0,
-      avgTradesPerDay: analytics.avgTradesPerDay ?? 0,
+      winRate: safeNumber(analytics.winRate),
+      totalPnL: safeNumber(analytics.totalPnL),
+      avgWin: safeNumber(analytics.avgWin),
+      avgLoss: safeNumber(analytics.avgLoss),
+      profitFactor: safeNumber(analytics.profitFactor),
+      expectancy: safeNumber(analytics.expectancy),
+      avgTradesPerDay: safeNumber(analytics.avgTradesPerDay),
 
       movedStopsStats: analytics.movedStopsStats ?? {
         total: 0,
@@ -52,9 +54,7 @@ export const useTradeAnalyticsV2 = (trades: Trade[]) => {
       pairChartData: analytics.pairChartData ?? [],
       emotionChartData: analytics.emotionChartData ?? [],
 
-      pairSuggestions: Array.from(
-        new Set(analytics.enrichedTrades.map((t) => t.pair).filter(Boolean))
-      ),
+      pairSuggestions: analytics.pairSuggestions ?? [],
     };
   }, [trades]);
 };
