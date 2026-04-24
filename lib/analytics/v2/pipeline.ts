@@ -91,35 +91,111 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     }));
   };
 
-  const sessionGroups = groupBy('session');
+  const sessionOrder = ['Asia', 'London', 'NYAM', 'Out of KZ'];
+
+  const sessionGroupsMap: Record<string, Trade[]> = {};
+
+  enrichedTrades.forEach((t) => {
+    const key = String(t.session || 'Unknown');
+
+    if (!sessionGroupsMap[key]) sessionGroupsMap[key] = [];
+    sessionGroupsMap[key].push(t);
+  });
+
+  const sessionGroups = sessionOrder
+    .map((session) => {
+      const items = sessionGroupsMap[session] || [];
+
+      return {
+        label: session,
+        stats: {
+          trades: items.length,
+          winRate: items.length
+            ? (items.filter((t) => t.result === 'Win').length / items.length) *
+              100
+            : 0,
+          totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
+          profitFactor: 1,
+          expectancy: 0,
+        },
+      };
+    })
+    .filter((g) => g.stats.trades > 0);
+
   const typeGroups = groupBy('type');
-  const emotionGroups = groupBy('feeling');
   const pairGroups = groupBy('pair');
 
-  const weekdayGroups = (() => {
-    const map: Record<string, Trade[]> = {};
+  const emotionOrder = ['Calm', 'Anxious'];
 
-    enrichedTrades.forEach((t) => {
-      const day = new Date(t.date).toLocaleDateString('en-US', {
-        weekday: 'long',
-      });
+  const emotionGroupsMap: Record<string, Trade[]> = {};
 
-      if (!map[day]) map[day] = [];
-      map[day].push(t);
+  enrichedTrades.forEach((t) => {
+    const key = String(t.feeling || 'Unknown');
+
+    if (!emotionGroupsMap[key]) emotionGroupsMap[key] = [];
+    emotionGroupsMap[key].push(t);
+  });
+
+  const emotionGroups = emotionOrder
+    .map((emotion) => {
+      const items = emotionGroupsMap[emotion] || [];
+
+      return {
+        label: emotion,
+        stats: {
+          trades: items.length,
+          winRate: items.length
+            ? (items.filter((t) => t.result === 'Win').length / items.length) *
+              100
+            : 0,
+          totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
+          profitFactor: 1,
+          expectancy: 0,
+        },
+      };
+    })
+    .filter((g) => g.stats.trades > 0);
+
+  const weekdayOrder = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+
+  const weekdayGroupsMap: Record<string, Trade[]> = {};
+
+  enrichedTrades.forEach((t) => {
+    const day = new Date(t.date).toLocaleDateString('en-US', {
+      weekday: 'long',
     });
 
-    return Object.entries(map).map(([label, items]) => ({
-      label,
-      stats: {
-        trades: items.length,
-        winRate:
-          (items.filter((t) => t.result === 'Win').length / items.length) * 100,
-        totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
-        profitFactor: 1,
-        expectancy: 0,
-      },
-    }));
-  })();
+    if (!weekdayGroupsMap[day]) weekdayGroupsMap[day] = [];
+    weekdayGroupsMap[day].push(t);
+  });
+
+  const weekdayGroups = weekdayOrder
+    .map((day) => {
+      const items = weekdayGroupsMap[day] || [];
+
+      return {
+        label: day,
+        stats: {
+          trades: items.length,
+          winRate: items.length
+            ? (items.filter((t) => t.result === 'Win').length / items.length) *
+              100
+            : 0,
+          totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
+          profitFactor: 1,
+          expectancy: 0,
+        },
+      };
+    })
+    .filter((g) => g.stats.trades > 0);
 
   const scoreGroups = groupBy('checklistScore' as any);
 
@@ -129,26 +205,36 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
   const sessionChartData = sessionGroups.map((g) => ({
     name: g.label,
     pnl: g.stats.totalPnL,
+    winRate: g.stats.winRate,
+    trades: g.stats.trades,
   }));
 
   const typeChartData = typeGroups.map((g) => ({
     name: g.label,
     pnl: g.stats.totalPnL,
+    winRate: g.stats.winRate,
+    trades: g.stats.trades,
   }));
 
   const emotionChartData = emotionGroups.map((g) => ({
     name: g.label,
     pnl: g.stats.totalPnL,
+    winRate: g.stats.winRate,
+    trades: g.stats.trades,
   }));
 
   const pairChartData = pairGroups.map((g) => ({
     name: g.label,
+    pnl: g.stats.totalPnL,
     winRate: g.stats.winRate,
+    trades: g.stats.trades,
   }));
 
   const weekdayChartData = weekdayGroups.map((g) => ({
     name: g.label,
     pnl: g.stats.totalPnL,
+    winRate: g.stats.winRate,
+    trades: g.stats.trades,
   }));
 
   // =====================

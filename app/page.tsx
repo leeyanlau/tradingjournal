@@ -924,6 +924,21 @@ export default function Home() {
     });
   }, [filteredTrades]);
 
+  const AnalyticsTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+
+    const data = payload[0].payload;
+
+    return (
+      <div className="bg-black text-white p-3 rounded-lg text-xs space-y-1">
+        <p className="font-semibold">{label}</p>
+        <p>PnL: {data.pnl}</p>
+        <p>Win Rate: {data.winRate?.toFixed(1)}%</p>
+        <p>Trades: {data.trades}</p>
+      </div>
+    );
+  };
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -1728,7 +1743,7 @@ export default function Home() {
 
           {/* WEEKDAY PNL */}
           <div>
-            <h3 className="font-semibold mb-2">PnL by Day of Week</h3>
+            <h3 className="font-semibold mb-2">Analytics by Day of Week</h3>
 
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={weekdayChartData}>
@@ -1738,7 +1753,7 @@ export default function Home() {
                 {/* 🔥 IMPORTANT FIX FOR NEGATIVE VALUES */}
                 <YAxis domain={['auto', 'auto']} />
 
-                <Tooltip />
+                <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="pnl" />
               </BarChart>
             </ResponsiveContainer>
@@ -1746,14 +1761,14 @@ export default function Home() {
 
           {/* TRADE TYPE */}
           <div>
-            <h3 className="font-semibold mb-2">PnL by Trade Type</h3>
+            <h3 className="font-semibold mb-2">Analytics by Trade Type</h3>
 
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={typeChartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="pnl" />
               </BarChart>
             </ResponsiveContainer>
@@ -1761,14 +1776,14 @@ export default function Home() {
 
           {/* SESSION */}
           <div>
-            <h3 className="font-semibold mb-2">PnL by Session</h3>
+            <h3 className="font-semibold mb-2">Analytics by Session</h3>
 
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={sessionChartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="pnl" />
               </BarChart>
             </ResponsiveContainer>
@@ -1776,7 +1791,7 @@ export default function Home() {
 
           {/* PAIR */}
           <div>
-            <h3 className="font-semibold mb-2">PnL by Pair</h3>
+            <h3 className="font-semibold mb-2">Analytics by Pair</h3>
 
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={pairChartData}>
@@ -1785,7 +1800,7 @@ export default function Home() {
 
                 <YAxis domain={[0, 100]} />
 
-                <Tooltip formatter={(value: any) => `${value.toFixed(1)}%`} />
+                <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="winRate" />
               </BarChart>
             </ResponsiveContainer>
@@ -1793,14 +1808,14 @@ export default function Home() {
 
           {/* EMOTION */}
           <div>
-            <h3 className="font-semibold mb-2">PnL by Emotion</h3>
+            <h3 className="font-semibold mb-2">Analytics by Emotion</h3>
 
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={emotionChartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip content={<AnalyticsTooltip />} />
                 <Bar dataKey="pnl" />
               </BarChart>
             </ResponsiveContainer>
