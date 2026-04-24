@@ -4,10 +4,16 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
   // =====================
   // ENRICHED TRADES (basic normalization)
   // =====================
-  const enrichedTrades = trades.map((t, idx) => ({
-    ...t,
-    tradeNo: trades.length - idx,
-  }));
+  const enrichedTrades = [...trades]
+    .sort(
+      (a, b) =>
+        new Date(`${b.date}T${b.entryTime}`).getTime() -
+        new Date(`${a.date}T${a.entryTime}`).getTime()
+    )
+    .map((t, idx) => ({
+      ...t,
+      tradeNo: idx + 1,
+    }));
 
   // =====================
   // BASIC STATS (placeholder if you already have custom stats logic)
