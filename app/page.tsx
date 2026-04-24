@@ -6,6 +6,7 @@ import { useTradeGroups } from '@/hooks/useTradeGroups';
 import { useTradeCharts } from '@/hooks/useTradeCharts';
 import { Trade, MovedStopResult } from '@/types/trade';
 import { getTradeStats } from '@/lib/analytics/tradeAnalytics';
+import { useTradeAnalytics } from '@/hooks/useTradeAnalytics';
 
 import {
   LineChart,
@@ -857,8 +858,11 @@ export default function Home() {
     return mistakes;
   };
 
+  const { enrichedTrades, sortedTrades, displayTrades, stats, typeGroups } =
+    useTradeAnalytics(trades);
+
   // FILTERED DATA
-  const processedTrades = useMemo(() => {
+  /* const processedTrades = useMemo(() => {
     return [...trades].filter((t) => {
       if (filters.session.length && !filters.session.includes(t.session))
         return false;
@@ -877,7 +881,7 @@ export default function Home() {
 
       return true;
     });
-  }, [trades, filters]);
+  }, [trades, filters]); */
 
   const toggleFilter = (
     key: 'session' | 'result' | 'pair' | 'feeling',
@@ -939,14 +943,14 @@ export default function Home() {
     );
   };
 
-  const sortedTrades = useMemo(() => {
+  /* const sortedTrades = useMemo(() => {
     return [...processedTrades].sort((a, b) => {
       return (
         new Date(`${b.date}T${b.entryTime}`).getTime() -
         new Date(`${a.date}T${a.entryTime}`).getTime()
       );
     });
-  }, [processedTrades]);
+  }, [processedTrades]); 
 
   const enrichedTrades = useMemo(() => {
     return sortedTrades.map((t) => ({
@@ -960,7 +964,7 @@ export default function Home() {
       ...t,
       tradeNo: enrichedTrades.length - index, // newest = highest number
     }));
-  }, [enrichedTrades]);
+  }, [enrichedTrades]); */
 
   const pairList = useMemo(() => {
     return Array.from(
@@ -1011,13 +1015,13 @@ export default function Home() {
   );
 
   const equitySource = useMemo(() => {
-    return [...processedTrades].sort((a, b) => {
+    return [...enrichedTrades].sort((a, b) => {
       return (
         new Date(`${a.date}T${a.entryTime}`).getTime() -
         new Date(`${b.date}T${b.entryTime}`).getTime()
       );
     });
-  }, [processedTrades]);
+  }, [enrichedTrades]);
 
   const equityData = equitySource.reduce((acc: any[], t, index) => {
     const pnl = Number(t.amount || 0);
@@ -1065,13 +1069,8 @@ export default function Home() {
   // =====================
   // Grouping
   // =====================
-  const {
-    sessionGroups,
-    weekdayGroups,
-    emotionGroups,
-    scoreGroups,
-    typeGroups,
-  } = useTradeGroups(displayTrades);
+  const { sessionGroups, weekdayGroups, emotionGroups, scoreGroups } =
+    useTradeGroups(displayTrades);
 
   const {
     sessionChartData,
