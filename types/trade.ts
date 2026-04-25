@@ -1,3 +1,5 @@
+import { Mistake } from '@/lib/analytics/mistakes';
+
 export type MovedStopResult = 'PROTECTED' | 'OVERMANAGED' | 'IRRELEVANT' | null;
 
 export type Trade = {
@@ -19,6 +21,7 @@ export type Trade = {
   feeling: string;
   movedStops: boolean;
   movedStopsWorked: MovedStopResult;
+  behavioralMistakes: Mistake[];
 };
 
 export type Checklist = {

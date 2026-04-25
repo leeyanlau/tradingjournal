@@ -8,6 +8,8 @@ import { tradeStorage } from '@/lib/storage/tradeStorage';
 import { getSession } from '@/utils/getSession';
 import { calculateChecklist } from '@/utils/checklist';
 import { dummyTrades } from '@/data/dummyTrades';
+import { detectMistakes } from '../utils/detectMistakes';
+import { checklistRules } from '@/utils/checklistRules';
 
 import {
   LineChart,
@@ -70,6 +72,7 @@ const createDefaultTrade = (): Trade => ({
   feeling: 'Calm',
   movedStops: false,
   movedStopsWorked: null,
+  behavioralMistakes: {},
 });
 
 type Mistake = {
@@ -110,7 +113,11 @@ export default function Home() {
     const saved = tradeStorage.get('trades');
 
     if (!saved) {
-      setTrades(dummyTrades);
+      const withMistakes = dummyTrades.map((t) => ({
+        ...t,
+        behavioralMistakes: detectMistakes(t),
+      }));
+      setTrades(withMistakes);
       didLoad.current = true;
       return;
     }
@@ -123,11 +130,16 @@ export default function Home() {
         ...t,
         id: t.id || crypto.randomUUID(),
         movedStopsWorked: t.movedStopsWorked ?? null,
+        behavioralMistakes: detectMistakes(t), // <-- add this
       }));
 
       setTrades(normalized);
     } catch {
-      setTrades(dummyTrades);
+      const withMistakes = dummyTrades.map((t) => ({
+        ...t,
+        behavioralMistakes: detectMistakes(t),
+      }));
+      setTrades(withMistakes);
     }
 
     didLoad.current = true;
@@ -209,10 +221,16 @@ export default function Home() {
     if (trade.result === 'Win') normalizedAmount = Math.abs(rawAmount);
     if (trade.result === 'Breakeven') normalizedAmount = 0;
 
+    // 📝 BUILD FINAL TRADE OBJECT
     const finalTrade: Trade = {
       ...trade,
       id: editingId || trade.id || crypto.randomUUID(),
       amount: String(normalizedAmount),
+      // ✅ Compute mistakes automatically
+      behavioralMistakes: detectMistakes({
+        ...trade,
+        amount: String(normalizedAmount),
+      }),
     };
 
     // ➕ ADD OR ✏️ EDIT
@@ -232,11 +250,10 @@ export default function Home() {
   // HANDLE EDIT TRADE
   // --------------------
   const handleEdit = (t: Trade) => {
-    setTrade(t);
+    setTrade({ ...t, behavioralMistakes: detectMistakes(t) });
     setPairQuery(t.pair);
     setEditingId(t.id || null);
 
-    // optional: scroll to form (nice UX)
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -479,6 +496,51 @@ export default function Home() {
     });
     return map;
   }, [filteredTrades]);
+
+  const tallyMistakes = (
+    trades: Trade[],
+    checklistRules: typeof checklistRules
+  ) => {
+    // Initialize all checklist mistakes to 0
+    const checklistTally: Record<string, number> = {};
+    Object.keys(checklistRules).forEach((key) => {
+      checklistTally[checklistRules[key as keyof typeof checklistRules].type] =
+        0;
+    });
+
+    const behavioralTally: Record<string, number> = {};
+
+    trades.forEach((t) => {
+      const mistakes = t.behavioralMistakes || [];
+      mistakes.forEach((m) => {
+        if (m.category === 'checklist') {
+          checklistTally[m.type] = (checklistTally[m.type] || 0) + 1;
+        } else if (m.category === 'behavioral') {
+          behavioralTally[m.type] = (behavioralTally[m.type] || 0) + 1;
+        }
+      });
+    });
+
+    // Sort each tally by frequency (descending)
+    const sortTally = (tally: Record<string, number>) =>
+      Object.fromEntries(Object.entries(tally).sort(([, a], [, b]) => b - a));
+
+    return {
+      checklistTally: sortTally(checklistTally),
+      behavioralTally: sortTally(behavioralTally),
+    };
+  };
+
+  // Map trades to include behavioralMistakes
+  const tradesWithMistakes = trades.map((t) => ({
+    ...t,
+    behavioralMistakes: detectMistakes(t),
+  }));
+
+  const { checklistTally, behavioralTally } = tallyMistakes(
+    tradesWithMistakes,
+    checklistRules
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -955,21 +1017,29 @@ export default function Home() {
             </div>
 
             <div className="bg-white p-4 rounded-xl shadow">
-              <h3 className="font-semibold mb-2">Mistake Breakdown</h3>
+              <h3 className="font-semibold mb-2">Checklist Mistakes</h3>
+              <table className="w-full text-sm border-collapse mb-4">
+                <tbody>
+                  {Object.entries(checklistTally).map(([type, count]) => (
+                    <tr key={type} className="border-b">
+                      <td className="p-2">{type}</td>
+                      <td className="p-2 text-right">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-              {Object.entries(mistakeSummary).map(([type, count]) => (
-                <div
-                  key={type}
-                  className="flex justify-between text-sm border-b py-1"
-                >
-                  <span>{type}</span>
-                  <span>{count}</span>
-                </div>
-              ))}
-
-              <p className="mt-2 text-red-600 font-semibold">
-                Total Mistake Cost: {mistakeCost}
-              </p>
+              <h3 className="font-semibold mb-2">Behavioral Mistakes</h3>
+              <table className="w-full text-sm border-collapse">
+                <tbody>
+                  {Object.entries(behavioralTally).map(([type, count]) => (
+                    <tr key={type} className="border-b">
+                      <td className="p-2">{type}</td>
+                      <td className="p-2 text-right">{count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1301,31 +1371,14 @@ export default function Home() {
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="border p-2 text-xs text-left">
-                      {(t.mistakes ?? []).filter(
-                        (m) => m.category === 'behavioral'
-                      ).length > 0 ? (
-                        <div className="space-y-1 text-left">
-                          {(t.mistakes ?? [])
-                            .filter((m) => m.category === 'behavioral')
-                            .map((m, i) => (
-                              <div
-                                key={i}
-                                className={
-                                  m.severity === 'high'
-                                    ? 'text-red-600'
-                                    : m.severity === 'medium'
-                                      ? 'text-orange-500'
-                                      : 'text-yellow-600'
-                                }
-                              >
-                                • {m.type}
-                              </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
+                    <td className="border p-2 text-left text-xs">
+                      <ul className="list-disc list-inside">
+                        {t.behavioralMistakes
+                          .filter((m) => m.category === 'behavioral')
+                          .map((m, idx) => (
+                            <li key={idx}>{m.type}</li>
+                          ))}
+                      </ul>
                     </td>
                     <td className="border p-2 text-left text-xs">
                       {t.remarks || '-'}

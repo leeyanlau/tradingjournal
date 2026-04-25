@@ -33,6 +33,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: true,
     movedStopsWorked: 'PROTECTED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -63,6 +64,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: true,
     movedStopsWorked: 'OVERMANAGED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -93,6 +95,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -123,6 +126,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: true,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -153,6 +157,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -183,6 +188,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: true,
     movedStopsWorked: 'PROTECTED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -213,6 +219,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -243,6 +250,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: true,
     movedStopsWorked: 'OVERMANAGED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -273,6 +281,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -303,6 +312,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: true,
     movedStopsWorked: 'OVERMANAGED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -333,6 +343,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -363,6 +374,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -393,6 +405,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -423,6 +436,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: true,
     movedStopsWorked: 'PROTECTED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -453,6 +467,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: true,
     movedStopsWorked: 'OVERMANAGED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -483,6 +498,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -513,6 +529,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Anxious',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -543,6 +560,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
 
   {
@@ -574,6 +592,7 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: true,
     movedStopsWorked: 'PROTECTED',
+    behavioralMistakes: [],
   },
   {
     id: crypto.randomUUID(),
@@ -604,5 +623,6 @@ export const dummyTrades: Trade[] = [
     feeling: 'Calm',
     movedStops: false,
     movedStopsWorked: 'IRRELEVANT',
+    behavioralMistakes: [],
   },
 ];

@@ -275,7 +275,7 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     netImpact: successTrades.length - failTrades.length,
     pnlImpact:
       successTrades.reduce((s, t) => s + safeAmount(t.amount), 0) -
-      failTrades.reduce((s, t) => s + safeAmount(t.amount), 0),
+      Math.abs(failTrades.reduce((s, t) => s + safeAmount(t.amount), 0)),
   };
 
   // =====================
