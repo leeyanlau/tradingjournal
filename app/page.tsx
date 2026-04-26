@@ -307,6 +307,9 @@ export default function Home() {
   const {
     enrichedTrades,
     winRate,
+    winCount,
+    lossCount,
+    breakevenCount,
     totalPnL,
     avgWin,
     avgLoss,
@@ -891,9 +894,47 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-4">Analytics</h2>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div className="p-3 border rounded-lg">
-              <p className="text-gray-500">Win Rate</p>
-              <p className="text-lg font-semibold">{winRate.toFixed(1)}%</p>
+            <div className="p-3 border rounded-lg relative group">
+              <p className="text-gray-500 flex items-center gap-1">
+                Win Rate
+                <span className="cursor-pointer text-gray-400 hover:text-black">
+                  ℹ️
+                </span>
+              </p>
+
+              <p className="text-lg font-semibold text-blue-600">
+                {winRate.toFixed(2)}%
+              </p>
+
+              {/* TOOLTIP */}
+              <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
+                <p className="font-semibold mb-2">📊 Win Rate Method</p>
+
+                <p className="mb-2">
+                  This win rate{' '}
+                  <b>includes breakeven trades in the total count</b>.
+                </p>
+
+                <p className="mb-2">
+                  Formula:
+                  <br />
+                  Wins ÷ (Wins + Losses + Breakevens)
+                </p>
+
+                <p className="mb-2">Breakdown:</p>
+
+                <ul className="list-disc ml-4 space-y-1 mb-2">
+                  <li>Wins: {winCount}</li>
+                  <li>Losses: {lossCount}</li>
+                  <li>Breakeven: {breakevenCount}</li>
+                </ul>
+
+                <p className="text-gray-300">
+                  ⚠️ Some traders exclude breakevens to measure execution
+                  quality separately. This dashboard uses the inclusive method
+                  for consistency.
+                </p>
+              </div>
             </div>
 
             <div className="p-3 border rounded-lg">

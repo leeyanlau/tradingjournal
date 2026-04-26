@@ -21,6 +21,15 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
   const winTrades = enrichedTrades.filter((t) => t.result === 'Win');
   const lossTrades = enrichedTrades.filter((t) => t.result === 'Loss');
 
+  const winCount = winTrades.length;
+  const lossCount = lossTrades.length;
+  const breakevenCount = enrichedTrades.filter(
+    (t) => t.result === 'Breakeven'
+  ).length;
+  const totalTrades = enrichedTrades.length;
+
+  const winRate = totalTrades > 0 ? (winCount / totalTrades) * 100 : 0;
+
   const totalPnL = enrichedTrades.reduce(
     (s, t) => s + Number(t.amount || 0),
     0
@@ -28,9 +37,7 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
 
   const stats = {
     trades: enrichedTrades.length,
-    winRate: enrichedTrades.length
-      ? (winTrades.length / enrichedTrades.length) * 100
-      : 0,
+    winRate,
     totalPnL,
     avgWin:
       winTrades.length > 0
@@ -330,6 +337,9 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     enrichedTrades,
     winRate: stats.winRate,
     totalPnL: stats.totalPnL,
+    winCount,
+    lossCount,
+    breakevenCount,
     avgWin: stats.avgWin,
     avgLoss: stats.avgLoss,
 
