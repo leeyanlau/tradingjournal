@@ -1020,16 +1020,34 @@ export default function Home() {
 
               {/* TOOLTIP */}
               <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
-                <p className="font-semibold mb-1">⚠️ Important</p>
+                <p className="font-semibold mb-2">📊 Expectancy Explained</p>
 
-                <p>Win rate alone means nothing</p>
-                <p className="mb-2">Expectancy is everything</p>
+                <p className="mb-2">
+                  Expectancy measures how much you expect to{' '}
+                  <b>make or lose per trade on average</b>.
+                </p>
 
-                <p className="mb-1">Examples:</p>
-                <ul className="list-disc ml-4 space-y-1">
-                  <li>40% win rate + positive expectancy → profitable</li>
-                  <li>70% win rate + negative expectancy → losing</li>
+                <p className="mb-2">
+                  It tells you whether your strategy is profitable over time,
+                  not just how often you win.
+                </p>
+
+                <p className="mb-2 font-semibold">Formula:</p>
+                <p className="mb-2">
+                  Expectancy = (Win Rate × Avg Win) + (Loss Rate × Avg Loss)
+                </p>
+
+                <p className="mb-2 font-semibold">How to read it:</p>
+                <ul className="list-disc ml-4 space-y-1 mb-2">
+                  <li>Above 0 → profitable strategy</li>
+                  <li>Below 0 → losing strategy</li>
+                  <li>Higher value → stronger edge per trade</li>
                 </ul>
+
+                <p className="text-gray-300">
+                  ⚠️ Expectancy is more important than win rate because it
+                  factors in both probability and payoff size.
+                </p>
               </div>
             </div>
 
