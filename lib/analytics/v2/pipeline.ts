@@ -85,17 +85,52 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
       map[k].push(t);
     });
 
-    return Object.entries(map).map(([label, items]) => ({
-      label,
-      stats: {
-        trades: items.length,
-        winRate:
-          (items.filter((t) => t.result === 'Win').length / items.length) * 100,
-        totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
-        profitFactor: 1, // placeholder (safe default)
-        expectancy: 0, // placeholder
-      },
-    }));
+    return Object.entries(map).map(([label, items]) => {
+      const wins = items.filter((t) => t.result === 'Win');
+      const losses = items.filter((t) => t.result === 'Loss');
+
+      const winCount = wins.length;
+      const lossCount = losses.length;
+
+      const winRate = items.length ? (winCount / items.length) * 100 : 0;
+
+      const totalPnL = items.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const avgWin =
+        winCount > 0
+          ? wins.reduce((s, t) => s + Number(t.amount || 0), 0) / winCount
+          : 0;
+
+      const avgLoss =
+        lossCount > 0
+          ? losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0) /
+            lossCount
+          : 0;
+
+      const profitFactor =
+        lossCount === 0
+          ? winCount > 0
+            ? 999
+            : 0
+          : Math.abs(
+              wins.reduce((s, t) => s + Number(t.amount || 0), 0) /
+                losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0)
+            );
+
+      const expectancy =
+        (winRate / 100) * avgWin + ((100 - winRate) / 100) * -avgLoss;
+
+      return {
+        label,
+        stats: {
+          trades: items.length,
+          winRate,
+          totalPnL,
+          profitFactor,
+          expectancy,
+        },
+      };
+    });
   };
 
   const sessionOrder = ['Asia', 'London', 'NYAM', 'Out of KZ'];
@@ -113,17 +148,48 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     .map((session) => {
       const items = sessionGroupsMap[session] || [];
 
+      const wins = items.filter((t) => t.result === 'Win');
+      const losses = items.filter((t) => t.result === 'Loss');
+
+      const winCount = wins.length;
+      const lossCount = losses.length;
+
+      const winRate = items.length ? (winCount / items.length) * 100 : 0;
+
+      const totalPnL = items.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const avgWin =
+        winCount > 0
+          ? wins.reduce((s, t) => s + Number(t.amount || 0), 0) / winCount
+          : 0;
+
+      const avgLoss =
+        lossCount > 0
+          ? losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0) /
+            lossCount
+          : 0;
+
+      const profitFactor =
+        lossCount === 0
+          ? winCount > 0
+            ? 999
+            : 0
+          : Math.abs(
+              wins.reduce((s, t) => s + Number(t.amount || 0), 0) /
+                losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0)
+            );
+
+      const expectancy =
+        (winRate / 100) * avgWin + ((100 - winRate) / 100) * -avgLoss;
+
       return {
         label: session,
         stats: {
           trades: items.length,
-          winRate: items.length
-            ? (items.filter((t) => t.result === 'Win').length / items.length) *
-              100
-            : 0,
-          totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
-          profitFactor: 1,
-          expectancy: 0,
+          winRate,
+          totalPnL,
+          profitFactor,
+          expectancy,
         },
       };
     })
@@ -147,17 +213,48 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     .map((emotion) => {
       const items = emotionGroupsMap[emotion] || [];
 
+      const wins = items.filter((t) => t.result === 'Win');
+      const losses = items.filter((t) => t.result === 'Loss');
+
+      const winCount = wins.length;
+      const lossCount = losses.length;
+
+      const winRate = items.length ? (winCount / items.length) * 100 : 0;
+
+      const totalPnL = items.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const avgWin =
+        winCount > 0
+          ? wins.reduce((s, t) => s + Number(t.amount || 0), 0) / winCount
+          : 0;
+
+      const avgLoss =
+        lossCount > 0
+          ? losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0) /
+            lossCount
+          : 0;
+
+      const profitFactor =
+        lossCount === 0
+          ? winCount > 0
+            ? 999
+            : 0
+          : Math.abs(
+              wins.reduce((s, t) => s + Number(t.amount || 0), 0) /
+                losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0)
+            );
+
+      const expectancy =
+        (winRate / 100) * avgWin + ((100 - winRate) / 100) * -avgLoss;
+
       return {
         label: emotion,
         stats: {
           trades: items.length,
-          winRate: items.length
-            ? (items.filter((t) => t.result === 'Win').length / items.length) *
-              100
-            : 0,
-          totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
-          profitFactor: 1,
-          expectancy: 0,
+          winRate,
+          totalPnL,
+          profitFactor,
+          expectancy,
         },
       };
     })
@@ -188,23 +285,110 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     .map((day) => {
       const items = weekdayGroupsMap[day] || [];
 
+      const wins = items.filter((t) => t.result === 'Win');
+      const losses = items.filter((t) => t.result === 'Loss');
+
+      const winCount = wins.length;
+      const lossCount = losses.length;
+
+      const winRate = items.length ? (winCount / items.length) * 100 : 0;
+
+      const totalPnL = items.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const avgWin =
+        winCount > 0
+          ? wins.reduce((s, t) => s + Number(t.amount || 0), 0) / winCount
+          : 0;
+
+      const avgLoss =
+        lossCount > 0
+          ? losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0) /
+            lossCount
+          : 0;
+
+      const profitFactor =
+        lossCount === 0
+          ? winCount > 0
+            ? 999
+            : 0
+          : Math.abs(
+              wins.reduce((s, t) => s + Number(t.amount || 0), 0) /
+                losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0)
+            );
+
+      const expectancy =
+        (winRate / 100) * avgWin + ((100 - winRate) / 100) * -avgLoss;
+
       return {
         label: day,
         stats: {
           trades: items.length,
-          winRate: items.length
-            ? (items.filter((t) => t.result === 'Win').length / items.length) *
-              100
-            : 0,
-          totalPnL: items.reduce((s, t) => s + Number(t.amount || 0), 0),
-          profitFactor: 1,
-          expectancy: 0,
+          winRate,
+          totalPnL,
+          profitFactor,
+          expectancy,
         },
       };
     })
     .filter((g) => g.stats.trades > 0);
 
-  const scoreGroups = groupBy('checklistScore' as any);
+  const scoreGroupsMap: Record<string, Trade[]> = {};
+
+  enrichedTrades.forEach((t) => {
+    const key = String(t.checklistScore);
+
+    if (!scoreGroupsMap[key]) scoreGroupsMap[key] = [];
+    scoreGroupsMap[key].push(t);
+  });
+
+  const scoreGroups = Object.entries(scoreGroupsMap)
+    .map(([label, items]) => {
+      const wins = items.filter((t) => t.result === 'Win');
+      const losses = items.filter((t) => t.result === 'Loss');
+
+      const winCount = wins.length;
+      const lossCount = losses.length;
+
+      const winRate = items.length ? (winCount / items.length) * 100 : 0;
+
+      const totalPnL = items.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const avgWin =
+        winCount > 0
+          ? wins.reduce((s, t) => s + Number(t.amount || 0), 0) / winCount
+          : 0;
+
+      const avgLoss =
+        lossCount > 0
+          ? losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0) /
+            lossCount
+          : 0;
+
+      const profitFactor =
+        lossCount === 0
+          ? winCount > 0
+            ? 999
+            : 0
+          : Math.abs(
+              wins.reduce((s, t) => s + Number(t.amount || 0), 0) /
+                losses.reduce((s, t) => s + Math.abs(Number(t.amount || 0)), 0)
+            );
+
+      const expectancy =
+        (winRate / 100) * avgWin + ((100 - winRate) / 100) * -avgLoss;
+
+      return {
+        label,
+        stats: {
+          trades: items.length,
+          winRate,
+          totalPnL,
+          profitFactor,
+          expectancy,
+        },
+      };
+    })
+    .sort((a, b) => Number(a.label) - Number(b.label));
 
   // =====================
   // CHART DATA HELPERS
