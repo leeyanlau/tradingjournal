@@ -82,6 +82,7 @@ type Mistake = {
 };
 
 export default function Home() {
+  const pairInputRef = useRef<HTMLDivElement>(null);
   // --------------------
   // STATE
   // --------------------
@@ -427,6 +428,34 @@ export default function Home() {
     });
   }, [enrichedTrades, filters]);
 
+  const allPairs = useMemo(() => {
+    return Array.from(
+      new Set(enrichedTrades.map((t) => t.pair).filter(Boolean))
+    );
+  }, [enrichedTrades]);
+
+  const filteredPairs = useMemo(() => {
+    const base = allPairs || [];
+
+    return pairQuery
+      ? base.filter((p) => p.toLowerCase().includes(pairQuery.toLowerCase()))
+      : base;
+  }, [allPairs, pairQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        pairInputRef.current &&
+        !pairInputRef.current.contains(e.target as Node)
+      ) {
+        setShowPairDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // --------------------
   // SORTED EQUITY DATA
   // --------------------
@@ -582,7 +611,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="relative">
+            <div className="relative" ref={pairInputRef}>
               <input
                 name="pair"
                 value={pairQuery}
@@ -616,9 +645,19 @@ export default function Home() {
             </div>
 
             {/* SESSION DISPLAY */}
-            <p className="text-sm text-gray-600">
-              Session: <span className="font-medium">{trade.session}</span>
-            </p>
+            <div className="border p-2 rounded-lg bg-gray-50 flex flex-col justify-center">
+              <label className="text-xs text-gray-400 mb-1">
+                Session (auto-detected)
+              </label>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-800">
+                  {trade.session || '-'}
+                </span>
+
+                <span className="text-xs text-gray-400">🔒</span>
+              </div>
+            </div>
 
             {/* TRADE STRUCTURE */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
