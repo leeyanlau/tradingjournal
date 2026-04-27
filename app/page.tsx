@@ -399,38 +399,6 @@ export default function Home() {
     );
   };
 
-  // --------------------
-  // FILTERED TRADES BASED ON SELECTED FILTERS
-  // --------------------
-  const filteredTrades = useMemo(() => {
-    return enrichedTrades.filter((t) => {
-      const sessionMatch =
-        filters.session.length === 0 || filters.session.includes(t.session);
-      const resultMatch =
-        filters.result.length === 0 || filters.result.includes(t.result);
-      const pairMatch =
-        filters.pair.length === 0 || filters.pair.includes(t.pair);
-      const feelingMatch =
-        filters.feeling.length === 0 || filters.feeling.includes(t.feeling);
-
-      const startMatch = filters.startDate
-        ? new Date(t.date) >= new Date(filters.startDate)
-        : true;
-      const endMatch = filters.endDate
-        ? new Date(t.date) <= new Date(filters.endDate)
-        : true;
-
-      return (
-        sessionMatch &&
-        resultMatch &&
-        pairMatch &&
-        feelingMatch &&
-        startMatch &&
-        endMatch
-      );
-    });
-  }, [enrichedTrades, filters]);
-
   const allPairs = useMemo(() => {
     return Array.from(
       new Set(enrichedTrades.map((t) => t.pair).filter(Boolean))
@@ -458,17 +426,6 @@ export default function Home() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // --------------------
-  // SORTED EQUITY DATA
-  // --------------------
-  const equitySource = useMemo(() => {
-    return [...filteredTrades].sort(
-      (a, b) =>
-        new Date(`${a.date}T${a.entryTime}`).getTime() -
-        new Date(`${b.date}T${b.entryTime}`).getTime()
-    );
-  }, [filteredTrades]);
 
   // --------------------
   // CHART TOOLTIP COMPONENTS
@@ -510,24 +467,16 @@ export default function Home() {
   };
 
   // --------------------
-  // BREAKEVEN TRADES
-  // --------------------
-  const breakevens = useMemo(
-    () => filteredTrades.filter((t) => t.result === 'Breakeven'),
-    [filteredTrades]
-  );
-
-  // --------------------
   // TRADES PER DAY MAP
   // --------------------
   const tradesPerDayMap = useMemo(() => {
     const map: Record<string, number> = {};
-    filteredTrades.forEach((t) => {
+    enrichedTrades.forEach((t) => {
       if (!t.date) return;
       map[t.date] = (map[t.date] || 0) + 1;
     });
     return map;
-  }, [filteredTrades]);
+  }, [enrichedTrades]);
 
   const tallyMistakes = (
     trades: Trade[],
@@ -1395,7 +1344,7 @@ export default function Home() {
             </thead>
 
             <tbody>
-              {[...filteredTrades]
+              {[...enrichedTrades]
                 .sort(
                   (a, b) =>
                     new Date(b.date + 'T' + b.entryTime).getTime() -
