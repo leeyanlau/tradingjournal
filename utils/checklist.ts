@@ -1,3 +1,5 @@
+import { Checklist } from '@/types/trade';
+
 // CHECKLIST SCORE
 export const calculateChecklist = (checklist: Checklist) => {
   const score = Object.values(checklist).filter(Boolean).length;

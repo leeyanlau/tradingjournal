@@ -1,6 +1,6 @@
 import { Trade } from '@/types/trade';
-import { detectMistakes } from '../mistakes';
-import { calculateChecklist } from '../checklist';
+import { detectMistakes } from '@/utils/detectMistakes';
+import { calculateChecklist } from '@/lib/analytics/checklist';
 import { EnrichedTrade } from './types';
 
 export const enrichTrades = (trades: Trade[]): EnrichedTrade[] => {

@@ -370,13 +370,13 @@ export const buildTradeAnalytics = (trades: Trade[], filters?: any) => {
   const mistakeSummary: Record<string, number> = {};
 
   enrichedTrades.forEach((t) => {
-    t.mistakes?.forEach((m) => {
+    t.behavioralMistakes?.forEach((m) => {
       mistakeSummary[m.type] = (mistakeSummary[m.type] || 0) + 1;
     });
   });
 
   const mistakeCost = enrichedTrades.reduce((sum, t) => {
-    if (t.result === 'Loss' && t.mistakes?.length) {
+    if (t.result === 'Loss' && t.behavioralMistakes?.length) {
       return sum + Math.abs(Number(t.amount || 0));
     }
     return sum;

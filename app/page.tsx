@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Trade } from '@/types/trade';
+import { Trade, MovedStopResult } from '@/types/trade';
 import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 import { tradeStorage } from '@/lib/storage/tradeStorage';
 
@@ -72,7 +72,7 @@ const createDefaultTrade = (): Trade => ({
   feeling: 'Calm',
   movedStops: false,
   movedStopsWorked: null,
-  behavioralMistakes: {},
+  behavioralMistakes: [],
 });
 
 type Mistake = {
@@ -111,7 +111,7 @@ export default function Home() {
   // EFFECT: LOAD TRADES
   // --------------------
   useEffect(() => {
-    const saved = tradeStorage.get('trades');
+    const saved = tradeStorage.get();
 
     if (!saved) {
       const withMistakes = dummyTrades.map((t) => ({
@@ -124,7 +124,7 @@ export default function Home() {
     }
 
     try {
-      const parsed: Trade[] = JSON.parse(saved);
+      const parsed: Trade[] = saved;
 
       const normalized = parsed.map((t) => ({
         ...createDefaultTrade(),
@@ -151,7 +151,7 @@ export default function Home() {
   // --------------------
   useEffect(() => {
     if (!didLoad.current) return;
-    tradeStorage.set('trades', JSON.stringify(trades));
+    tradeStorage.set(trades);
   }, [trades]);
 
   // --------------------
@@ -478,15 +478,11 @@ export default function Home() {
     return map;
   }, [enrichedTrades]);
 
-  const tallyMistakes = (
-    trades: Trade[],
-    checklistRules: typeof checklistRules
-  ) => {
+  const tallyMistakes = (trades: Trade[], rules: typeof checklistRules) => {
     // Initialize all checklist mistakes to 0
     const checklistTally: Record<string, number> = {};
-    Object.keys(checklistRules).forEach((key) => {
-      checklistTally[checklistRules[key as keyof typeof checklistRules].type] =
-        0;
+    Object.keys(rules).forEach((key) => {
+      checklistTally[rules[key as keyof typeof checklistRules].type] = 0;
     });
 
     const behavioralTally: Record<string, number> = {};

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Trade } from '@/types/trade';
-import { detectMistakes } from '@/lib/analytics/mistakes';
+import { detectMistakes } from '@/utils/detectMistakes';
 import { calculateChecklist } from '@/lib/analytics/checklist';
 
 export const useTradePipeline = (trades: Trade[]) => {

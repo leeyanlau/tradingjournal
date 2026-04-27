@@ -1,5 +1,5 @@
 import { Trade, Checklist } from '@/types/trade';
-import { Mistake } from '@/lib/analytics/mistakes';
+import { Mistake } from '@/types/mistakes';
 import { checklistRules } from './checklistRules';
 
 export const detectMistakes = (t: Trade): Mistake[] => {

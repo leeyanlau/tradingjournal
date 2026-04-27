@@ -1,9 +1,10 @@
 // /lib/analytics/v2/types.ts
 
 import { Trade } from '@/types/trade';
+import { Mistake } from '@/types/mistakes';
 
 export type EnrichedTrade = Trade & {
-  mistakes: string[];
+  behavioralMistakes: Mistake[];
   checklistScore: number;
   checklistPercentage: number;
 };

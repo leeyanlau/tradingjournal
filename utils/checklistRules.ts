@@ -1,5 +1,5 @@
 import { Checklist } from '@/types/trade';
-import { Mistake } from '@/lib/analytics/mistakes';
+import { Mistake } from '@/types/mistakes';
 
 export const checklistRules: Record<
   keyof Checklist,

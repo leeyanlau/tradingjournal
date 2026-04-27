@@ -1,4 +1,4 @@
-import { Mistake } from '@/lib/analytics/mistakes';
+import { Mistake } from '@/types/mistakes';
 
 export type MovedStopResult = 'PROTECTED' | 'OVERMANAGED' | 'IRRELEVANT' | null;
 
