@@ -23,6 +23,9 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import KPICards from '@/components/dashboard/KPICards';
+
 // --------------------
 // TYPES
 // --------------------
@@ -514,954 +517,963 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-8">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-center">Trading Journal</h1>
+    <DashboardLayout>
+      <KPICards stats={analytics} />
+      <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <h1 className="text-3xl font-bold text-center">Trading Journal</h1>
 
-        {/* FORM */}
-        <div className="bg-white p-6 rounded-2xl shadow space-y-4">
-          <h2 className="text-xl font-semibold">Add Trade</h2>
+          {/* FORM */}
+          <div className="bg-white p-6 rounded-2xl shadow space-y-4">
+            <h2 className="text-xl font-semibold">Add Trade</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* DATE + TIME */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input
-                type="date"
-                name="date"
-                value={trade.date}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* DATE + TIME */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input
+                  type="date"
+                  name="date"
+                  value={trade.date}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                  required
+                />
+
+                <input
+                  type="time"
+                  name="entryTime"
+                  value={trade.entryTime}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                  required
+                />
+
+                <input
+                  type="time"
+                  name="exitTime"
+                  value={trade.exitTime}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                  required
+                />
+              </div>
+
+              <div className="relative" ref={pairInputRef}>
+                <input
+                  name="pair"
+                  value={pairQuery}
+                  placeholder="Pair (e.g. NQ, EURUSD)"
+                  onChange={(e) => {
+                    setPairQuery(e.target.value);
+                    setTrade({ ...trade, pair: e.target.value });
+                    setShowPairDropdown(true);
+                  }}
+                  onFocus={() => setShowPairDropdown(true)}
+                  className="border p-2 rounded-lg w-full"
+                />
+
+                {showPairDropdown && filteredPairs.length > 0 && (
+                  <div className="absolute z-10 bg-white border w-full mt-1 rounded shadow max-h-40 overflow-auto">
+                    {filteredPairs.map((p) => (
+                      <div
+                        key={p}
+                        onClick={() => {
+                          setPairQuery(p);
+                          setTrade({ ...trade, pair: p });
+                          setShowPairDropdown(false);
+                        }}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* SESSION DISPLAY */}
+              <div className="border p-2 rounded-lg bg-gray-50 flex flex-col justify-center">
+                <label className="text-xs text-gray-400 mb-1">
+                  Session (auto-detected)
+                </label>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-800">
+                    {trade.session || '-'}
+                  </span>
+
+                  <span className="text-xs text-gray-400">🔒</span>
+                </div>
+              </div>
+
+              {/* TRADE STRUCTURE */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <select
+                  name="direction"
+                  value={trade.direction}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                >
+                  <option>Buy</option>
+                  <option>Sell</option>
+                </select>
+
+                <select
+                  name="type"
+                  value={trade.type}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                >
+                  <option>Scalp</option>
+                  <option>Day Trade</option>
+                  <option>Swing</option>
+                </select>
+
+                <select
+                  name="result"
+                  value={trade.result}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                >
+                  <option>Win</option>
+                  <option>Loss</option>
+                  <option>Breakeven</option>
+                </select>
+
+                <select
+                  name="feeling"
+                  value={trade.feeling}
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                >
+                  <option>Calm</option>
+                  <option>Anxious</option>
+                </select>
+              </div>
+
+              {/* RISK */}
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  name="risk"
+                  value={trade.risk}
+                  placeholder="Risk %"
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                  required
+                />
+
+                <input
+                  name="amount"
+                  value={trade.amount}
+                  placeholder="PnL (auto +/-)"
+                  onChange={handleChange}
+                  className="border p-2 rounded-lg"
+                  required
+                />
+              </div>
+
+              {/* CHECKLIST */}
+              <div>
+                <h3 className="font-semibold mb-2">AOC Checklist</h3>
+
+                <div className="flex flex-col gap-2">
+                  {Object.entries({
+                    bias: 'Daily bias clear',
+                    timeframeAlignment: 'Timeframe Alignment',
+                    sessionProfile: 'Session Profiles',
+                    pdArray: 'H1 PD Arrays',
+                    cisd: 'M5 CISD',
+                    strongHL: 'Strong High/Low',
+                    news: 'News',
+                    killzone: 'Killzone',
+                    smt: 'SMT',
+                  }).map(([key, label]) => (
+                    <label
+                      key={key}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={trade.checklist[key as keyof Checklist]}
+                        onChange={() => handleChecklist(key as keyof Checklist)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+
+                <div className="mt-2 text-sm">
+                  Score: {trade.checklistScore}/9 | Suggested Risk:{' '}
+                  <span className="font-semibold text-blue-600">
+                    {trade.suggestedRisk}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="movedStops"
+                    checked={trade.movedStops}
+                    onChange={(e) =>
+                      setTrade({
+                        ...trade,
+                        movedStops: e.target.checked,
+                        movedStopsWorked: e.target.checked
+                          ? trade.movedStopsWorked
+                          : null,
+                      })
+                    }
+                  />
+                  Moved stops?
+                </label>
+
+                {trade.movedStops && (
+                  <select
+                    name="movedStopsWorked"
+                    value={trade.movedStopsWorked ?? ''}
+                    onChange={(e) =>
+                      setTrade({
+                        ...trade,
+                        movedStopsWorked: e.target.value
+                          ? (e.target.value as MovedStopResult)
+                          : null,
+                      })
+                    }
+                    className="border p-2 rounded-lg"
+                  >
+                    <option value="PROTECTED">Protected SL (good)</option>
+                    <option value="OVERMANAGED">
+                      Interfered with TP (bad)
+                    </option>
+                    <option value="IRRELEVANT">No impact (neutral)</option>
+                  </select>
+                )}
+              </div>
+
+              {/* REMARKS */}
+              <textarea
+                name="remarks"
+                value={trade.remarks}
+                placeholder="Trade notes / execution thoughts..."
                 onChange={handleChange}
-                className="border p-2 rounded-lg"
-                required
-              />
-
-              <input
-                type="time"
-                name="entryTime"
-                value={trade.entryTime}
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-                required
-              />
-
-              <input
-                type="time"
-                name="exitTime"
-                value={trade.exitTime}
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-                required
-              />
-            </div>
-
-            <div className="relative" ref={pairInputRef}>
-              <input
-                name="pair"
-                value={pairQuery}
-                placeholder="Pair (e.g. NQ, EURUSD)"
-                onChange={(e) => {
-                  setPairQuery(e.target.value);
-                  setTrade({ ...trade, pair: e.target.value });
-                  setShowPairDropdown(true);
-                }}
-                onFocus={() => setShowPairDropdown(true)}
                 className="border p-2 rounded-lg w-full"
               />
 
-              {showPairDropdown && filteredPairs.length > 0 && (
-                <div className="absolute z-10 bg-white border w-full mt-1 rounded shadow max-h-40 overflow-auto">
-                  {filteredPairs.map((p) => (
-                    <div
-                      key={p}
-                      onClick={() => {
-                        setPairQuery(p);
-                        setTrade({ ...trade, pair: p });
-                        setShowPairDropdown(false);
-                      }}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                    >
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* SESSION DISPLAY */}
-            <div className="border p-2 rounded-lg bg-gray-50 flex flex-col justify-center">
-              <label className="text-xs text-gray-400 mb-1">
-                Session (auto-detected)
-              </label>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-800">
-                  {trade.session || '-'}
-                </span>
-
-                <span className="text-xs text-gray-400">🔒</span>
-              </div>
-            </div>
-
-            {/* TRADE STRUCTURE */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <select
-                name="direction"
-                value={trade.direction}
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
+              {/* SUBMIT */}
+              <button
+                type="submit"
+                className="w-full bg-black text-white py-2 rounded-xl hover:opacity-90"
               >
-                <option>Buy</option>
-                <option>Sell</option>
-              </select>
+                Add Trade
+              </button>
+            </form>
+          </div>
 
-              <select
-                name="type"
-                value={trade.type}
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-              >
-                <option>Scalp</option>
-                <option>Day Trade</option>
-                <option>Swing</option>
-              </select>
-
-              <select
-                name="result"
-                value={trade.result}
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-              >
-                <option>Win</option>
-                <option>Loss</option>
-                <option>Breakeven</option>
-              </select>
-
-              <select
-                name="feeling"
-                value={trade.feeling}
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-              >
-                <option>Calm</option>
-                <option>Anxious</option>
-              </select>
-            </div>
-
-            {/* RISK */}
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                name="risk"
-                value={trade.risk}
-                placeholder="Risk %"
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-                required
-              />
-
-              <input
-                name="amount"
-                value={trade.amount}
-                placeholder="PnL (auto +/-)"
-                onChange={handleChange}
-                className="border p-2 rounded-lg"
-                required
-              />
-            </div>
-
-            {/* CHECKLIST */}
-            <div>
-              <h3 className="font-semibold mb-2">AOC Checklist</h3>
-
-              <div className="flex flex-col gap-2">
-                {Object.entries({
-                  bias: 'Daily bias clear',
-                  timeframeAlignment: 'Timeframe Alignment',
-                  sessionProfile: 'Session Profiles',
-                  pdArray: 'H1 PD Arrays',
-                  cisd: 'M5 CISD',
-                  strongHL: 'Strong High/Low',
-                  news: 'News',
-                  killzone: 'Killzone',
-                  smt: 'SMT',
-                }).map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={trade.checklist[key as keyof Checklist]}
-                      onChange={() => handleChecklist(key as keyof Checklist)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-
-              <div className="mt-2 text-sm">
-                Score: {trade.checklistScore}/9 | Suggested Risk:{' '}
-                <span className="font-semibold text-blue-600">
-                  {trade.suggestedRisk}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="movedStops"
-                  checked={trade.movedStops}
-                  onChange={(e) =>
-                    setTrade({
-                      ...trade,
-                      movedStops: e.target.checked,
-                      movedStopsWorked: e.target.checked
-                        ? trade.movedStopsWorked
-                        : null,
-                    })
-                  }
-                />
-                Moved stops?
-              </label>
-
-              {trade.movedStops && (
-                <select
-                  name="movedStopsWorked"
-                  value={trade.movedStopsWorked ?? ''}
-                  onChange={(e) =>
-                    setTrade({
-                      ...trade,
-                      movedStopsWorked: e.target.value
-                        ? (e.target.value as MovedStopResult)
-                        : null,
-                    })
-                  }
-                  className="border p-2 rounded-lg"
-                >
-                  <option value="PROTECTED">Protected SL (good)</option>
-                  <option value="OVERMANAGED">Interfered with TP (bad)</option>
-                  <option value="IRRELEVANT">No impact (neutral)</option>
-                </select>
-              )}
-            </div>
-
-            {/* REMARKS */}
-            <textarea
-              name="remarks"
-              value={trade.remarks}
-              placeholder="Trade notes / execution thoughts..."
-              onChange={handleChange}
-              className="border p-2 rounded-lg w-full"
+          {/* FILTERS */}
+          <div className="bg-white p-4 rounded-2xl shadow flex gap-2 flex-wrap">
+            <MultiSelectDropdown
+              label="Session"
+              options={['Asia', 'London', 'NYAM', 'Out of KZ']}
+              selected={filters.session}
+              onToggle={(v) => toggleFilter('session', v)}
             />
 
-            {/* SUBMIT */}
+            <MultiSelectDropdown
+              label="Result"
+              options={['Win', 'Loss', 'Breakeven']}
+              selected={filters.result}
+              onToggle={(v) => toggleFilter('result', v)}
+            />
+
+            <MultiSelectDropdown
+              label="Pairs"
+              options={pairSuggestions}
+              selected={filters.pair}
+              onToggle={(v) => toggleFilter('pair', v)}
+            />
+
+            <MultiSelectDropdown
+              label="Feeling"
+              options={['Calm', 'Anxious']}
+              selected={filters.feeling}
+              onToggle={(v) => toggleFilter('feeling', v)}
+            />
+
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+                }
+                className="border p-2 rounded"
+              />
+
+              <input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+                }
+                className="border p-2 rounded"
+              />
+            </div>
+
             <button
-              type="submit"
-              className="w-full bg-black text-white py-2 rounded-xl hover:opacity-90"
+              onClick={() =>
+                setFilters({
+                  session: [],
+                  result: [],
+                  pair: [],
+                  feeling: [],
+                  startDate: '',
+                  endDate: '',
+                })
+              }
+              className="ml-auto bg-black text-white px-3 py-2 rounded"
             >
-              Add Trade
+              Reset
             </button>
-          </form>
-        </div>
-
-        {/* FILTERS */}
-        <div className="bg-white p-4 rounded-2xl shadow flex gap-2 flex-wrap">
-          <MultiSelectDropdown
-            label="Session"
-            options={['Asia', 'London', 'NYAM', 'Out of KZ']}
-            selected={filters.session}
-            onToggle={(v) => toggleFilter('session', v)}
-          />
-
-          <MultiSelectDropdown
-            label="Result"
-            options={['Win', 'Loss', 'Breakeven']}
-            selected={filters.result}
-            onToggle={(v) => toggleFilter('result', v)}
-          />
-
-          <MultiSelectDropdown
-            label="Pairs"
-            options={pairSuggestions}
-            selected={filters.pair}
-            onToggle={(v) => toggleFilter('pair', v)}
-          />
-
-          <MultiSelectDropdown
-            label="Feeling"
-            options={['Calm', 'Anxious']}
-            selected={filters.feeling}
-            onToggle={(v) => toggleFilter('feeling', v)}
-          />
-
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, startDate: e.target.value }))
-              }
-              className="border p-2 rounded"
-            />
-
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) =>
-                setFilters((prev) => ({ ...prev, endDate: e.target.value }))
-              }
-              className="border p-2 rounded"
-            />
           </div>
 
-          <button
-            onClick={() =>
-              setFilters({
-                session: [],
-                result: [],
-                pair: [],
-                feeling: [],
-                startDate: '',
-                endDate: '',
-              })
-            }
-            className="ml-auto bg-black text-white px-3 py-2 rounded"
-          >
-            Reset
-          </button>
-        </div>
+          {/* ANALYTICS DASHBOARD */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-semibold mb-4">Analytics</h2>
 
-        {/* ANALYTICS DASHBOARD */}
-        <div className="bg-white rounded-2xl shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Analytics</h2>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div className="p-3 border rounded-lg relative group">
-              <p className="text-gray-500 flex items-center gap-1">
-                Win Rate
-                <span className="cursor-pointer text-gray-400 hover:text-black">
-                  ℹ️
-                </span>
-              </p>
-
-              <p className="text-lg font-semibold text-blue-600">
-                {winRate.toFixed(2)}%
-              </p>
-
-              {/* TOOLTIP */}
-              <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
-                <p className="font-semibold mb-2">📊 Win Rate Method</p>
-
-                <p className="mb-2">
-                  This win rate{' '}
-                  <b>includes breakeven trades in the total count</b>.
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div className="p-3 border rounded-lg relative group">
+                <p className="text-gray-500 flex items-center gap-1">
+                  Win Rate
+                  <span className="cursor-pointer text-gray-400 hover:text-black">
+                    ℹ️
+                  </span>
                 </p>
 
-                <p className="mb-2">
-                  Formula:
-                  <br />
-                  Wins ÷ (Wins + Losses + Breakevens)
+                <p className="text-lg font-semibold text-blue-600">
+                  {winRate.toFixed(2)}%
                 </p>
 
-                <p className="mb-2">Breakdown:</p>
+                {/* TOOLTIP */}
+                <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
+                  <p className="font-semibold mb-2">📊 Win Rate Method</p>
 
-                <ul className="list-disc ml-4 space-y-1 mb-2">
-                  <li>Wins: {winCount}</li>
-                  <li>Losses: {lossCount}</li>
-                  <li>Breakeven: {breakevenCount}</li>
-                </ul>
+                  <p className="mb-2">
+                    This win rate{' '}
+                    <b>includes breakeven trades in the total count</b>.
+                  </p>
 
-                <p className="text-gray-300">
-                  ⚠️ Some traders exclude breakevens to measure execution
-                  quality separately. This dashboard uses the inclusive method
-                  for consistency.
+                  <p className="mb-2">
+                    Formula:
+                    <br />
+                    Wins ÷ (Wins + Losses + Breakevens)
+                  </p>
+
+                  <p className="mb-2">Breakdown:</p>
+
+                  <ul className="list-disc ml-4 space-y-1 mb-2">
+                    <li>Wins: {winCount}</li>
+                    <li>Losses: {lossCount}</li>
+                    <li>Breakeven: {breakevenCount}</li>
+                  </ul>
+
+                  <p className="text-gray-300">
+                    ⚠️ Some traders exclude breakevens to measure execution
+                    quality separately. This dashboard uses the inclusive method
+                    for consistency.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3 border rounded-lg">
+                <p className="text-gray-500">Total PnL</p>
+                <p
+                  className={`text-lg font-semibold ${totalPnL > 0 ? 'text-green-600' : totalPnL < 0 ? 'text-red-600' : ''}`}
+                >
+                  {totalPnL}
                 </p>
               </div>
-            </div>
 
-            <div className="p-3 border rounded-lg">
-              <p className="text-gray-500">Total PnL</p>
-              <p
-                className={`text-lg font-semibold ${totalPnL > 0 ? 'text-green-600' : totalPnL < 0 ? 'text-red-600' : ''}`}
-              >
-                {totalPnL}
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg">
-              <p className="text-gray-500">Avg Win</p>
-              <p className="text-lg font-semibold text-green-600">
-                {avgWin.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg">
-              <p className="text-gray-500">Avg Loss</p>
-              <p className="text-lg font-semibold text-red-600">
-                {avgLoss.toFixed(2)}
-              </p>
-            </div>
-
-            <div className="p-3 border rounded-lg relative group">
-              <p className="text-gray-500 flex items-center gap-1">
-                Profit Factor
-                {/* INFO ICON */}
-                <span className="cursor-pointer text-gray-400 hover:text-black">
-                  ℹ️
-                </span>
-              </p>
-
-              <p
-                className={`text-lg font-semibold ${
-                  profitFactor > 1.5
-                    ? 'text-green-600'
-                    : profitFactor < 1
-                      ? 'text-red-600'
-                      : 'text-yellow-600'
-                }`}
-              >
-                {profitFactor.toFixed(2)}
-              </p>
-
-              {/* TOOLTIP */}
-              <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
-                <p className="font-semibold mb-1">⚠️ Important</p>
-
-                <p className="mb-2">
-                  Profit Factor = Total Wins ÷ Total Losses
-                </p>
-
-                <p className="mb-1">Interpretation:</p>
-                <ul className="list-disc ml-4 space-y-1 mb-2">
-                  <li>Below 1.0 → Losing system</li>
-                  <li>1.0 – 1.5 → Weak edge</li>
-                  <li>1.5 – 2.0 → Solid</li>
-                  <li>Above 2.0 → Strong edge</li>
-                </ul>
-
-                <p className="text-gray-300">
-                  ⚠️ High profit factor with low sample size can be misleading
+              <div className="p-3 border rounded-lg">
+                <p className="text-gray-500">Avg Win</p>
+                <p className="text-lg font-semibold text-green-600">
+                  {avgWin.toFixed(2)}
                 </p>
               </div>
-            </div>
 
-            <div className="p-3 border rounded-lg relative group">
-              <p className="text-gray-500 flex items-center gap-1">
-                Expectancy
-                {/* INFO ICON */}
-                <span className="cursor-pointer text-gray-400 hover:text-black">
-                  ℹ️
-                </span>
-              </p>
-
-              <p
-                className={`text-lg font-semibold ${expectancy > 0 ? 'text-green-600' : expectancy < 0 ? 'text-red-600' : ''}`}
-              >
-                {expectancy.toFixed(2)}
-              </p>
-
-              {/* TOOLTIP */}
-              <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
-                <p className="font-semibold mb-2">📊 Expectancy Explained</p>
-
-                <p className="mb-2">
-                  Expectancy measures how much you expect to{' '}
-                  <b>make or lose per trade on average</b>.
-                </p>
-
-                <p className="mb-2">
-                  It tells you whether your strategy is profitable over time,
-                  not just how often you win.
-                </p>
-
-                <p className="mb-2 font-semibold">Formula:</p>
-                <p className="mb-2">
-                  Expectancy = (Win Rate × Avg Win) + (Loss Rate × Avg Loss)
-                </p>
-
-                <p className="mb-2 font-semibold">How to read it:</p>
-                <ul className="list-disc ml-4 space-y-1 mb-2">
-                  <li>Above 0 → profitable strategy</li>
-                  <li>Below 0 → losing strategy</li>
-                  <li>Higher value → stronger edge per trade</li>
-                </ul>
-
-                <p className="text-gray-300">
-                  ⚠️ Expectancy is more important than win rate because it
-                  factors in both probability and payoff size.
+              <div className="p-3 border rounded-lg">
+                <p className="text-gray-500">Avg Loss</p>
+                <p className="text-lg font-semibold text-red-600">
+                  {avgLoss.toFixed(2)}
                 </p>
               </div>
-            </div>
 
-            <div className="p-3 border rounded-lg">
-              <p className="text-gray-500">Avg Trades / Day</p>
-              <p className="text-lg font-semibold">
-                {avgTradesPerDay.toFixed(2)}
-              </p>
-            </div>
+              <div className="p-3 border rounded-lg relative group">
+                <p className="text-gray-500 flex items-center gap-1">
+                  Profit Factor
+                  {/* INFO ICON */}
+                  <span className="cursor-pointer text-gray-400 hover:text-black">
+                    ℹ️
+                  </span>
+                </p>
 
-            <div className="p-3 border rounded-lg">
-              <p className="text-gray-500">Moved Stops</p>
+                <p
+                  className={`text-lg font-semibold ${
+                    profitFactor > 1.5
+                      ? 'text-green-600'
+                      : profitFactor < 1
+                        ? 'text-red-600'
+                        : 'text-yellow-600'
+                  }`}
+                >
+                  {profitFactor.toFixed(2)}
+                </p>
 
-              <p className="text-lg font-semibold">
-                {movedStopsStats.total} trades
-              </p>
+                {/* TOOLTIP */}
+                <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
+                  <p className="font-semibold mb-1">⚠️ Important</p>
 
-              <p className="text-sm text-green-600">
-                Protected: {movedStopsStats.success} (
-                {movedStopsStats.pnlSuccess ?? 0})
-              </p>
+                  <p className="mb-2">
+                    Profit Factor = Total Wins ÷ Total Losses
+                  </p>
 
-              <p className="text-sm text-red-600">
-                Overmanaged: {movedStopsStats.fail} ({movedStopsStats.pnlFail})
-              </p>
+                  <p className="mb-1">Interpretation:</p>
+                  <ul className="list-disc ml-4 space-y-1 mb-2">
+                    <li>Below 1.0 → Losing system</li>
+                    <li>1.0 – 1.5 → Weak edge</li>
+                    <li>1.5 – 2.0 → Solid</li>
+                    <li>Above 2.0 → Strong edge</li>
+                  </ul>
 
-              <p className="text-sm text-gray-500">
-                Neutral: {movedStopsStats.neutral} ({movedStopsStats.pnlNeutral}
-                )
-              </p>
-
-              <p className="text-sm">
-                Quality: {(movedStopsStats.quality || 0).toFixed(1)}%
-              </p>
-
-              <p
-                className={`text-sm font-medium ${
-                  movedStopsStats.netImpact > 0
-                    ? 'text-green-600'
-                    : movedStopsStats.netImpact < 0
-                      ? 'text-red-600'
-                      : 'text-gray-500'
-                }`}
-              >
-                Net Impact: {movedStopsStats.netImpact > 0 ? '+' : ''}
-                {movedStopsStats.netImpact}
-              </p>
-
-              {/* 🔥 THE REAL TRUTH METRIC */}
-              <p
-                className={`text-sm font-semibold ${
-                  movedStopsStats.pnlImpact > 0
-                    ? 'text-green-600'
-                    : movedStopsStats.pnlImpact < 0
-                      ? 'text-red-600'
-                      : 'text-gray-500'
-                }`}
-              >
-                PnL Impact: {movedStopsStats.pnlImpact}
-              </p>
-
-              <p className="text-xs text-gray-500 mt-1">
-                Total (incl. neutral): {movedStopsStats.totalPnL}
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl shadow">
-              <h3 className="font-semibold mb-2">Checklist Mistakes</h3>
-              <table className="w-full text-sm border-collapse mb-4">
-                <tbody>
-                  {Object.entries(checklistTally).map(([type, count]) => (
-                    <tr key={type} className="border-b">
-                      <td className="p-2">{type}</td>
-                      <td className="p-2 text-right">{count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <h3 className="font-semibold mb-2">Behavioral Mistakes</h3>
-              <table className="w-full text-sm border-collapse">
-                <tbody>
-                  {Object.entries(behavioralTally).map(([type, count]) => (
-                    <tr key={type} className="border-b">
-                      <td className="p-2">{type}</td>
-                      <td className="p-2 text-right">{count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* ===================== */}
-        {/* BREAKDOWN SECTION */}
-        {/* ===================== */}
-
-        <div className="bg-white rounded-2xl shadow p-6 space-y-6">
-          <h2 className="text-xl font-semibold">Breakdown</h2>
-
-          {/* SESSION */}
-          <div>
-            <h3 className="font-semibold mb-2">By Session</h3>
-            <div className="grid md:grid-cols-4 gap-3 text-sm">
-              {sessionGroups.map((g) => (
-                <div key={g.label} className="border p-3 rounded-lg">
-                  <p className="font-medium">{g.label}</p>
-                  <p>Trades: {g.stats.trades}</p>
-                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                  <p>PnL: {g.stats.totalPnL}</p>
-                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  <p className="text-gray-300">
+                    ⚠️ High profit factor with low sample size can be misleading
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* TRADE TYPE */}
-          <div>
-            <h3 className="font-semibold mb-2">By Trade Type</h3>
+              <div className="p-3 border rounded-lg relative group">
+                <p className="text-gray-500 flex items-center gap-1">
+                  Expectancy
+                  {/* INFO ICON */}
+                  <span className="cursor-pointer text-gray-400 hover:text-black">
+                    ℹ️
+                  </span>
+                </p>
 
-            <div className="grid md:grid-cols-3 gap-3 text-sm">
-              {typeGroups.map((g) => (
-                <div key={g.label} className="border p-3 rounded-lg">
-                  <p className="font-medium">{g.label}</p>
-                  <p>Trades: {g.stats.trades}</p>
-                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                  <p>PnL: {g.stats.totalPnL}</p>
-                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                <p
+                  className={`text-lg font-semibold ${expectancy > 0 ? 'text-green-600' : expectancy < 0 ? 'text-red-600' : ''}`}
+                >
+                  {expectancy.toFixed(2)}
+                </p>
+
+                {/* TOOLTIP */}
+                <div className="absolute z-10 hidden group-hover:block w-72 p-3 text-xs text-white bg-black rounded-lg shadow-lg top-full mt-2 left-0">
+                  <p className="font-semibold mb-2">📊 Expectancy Explained</p>
+
+                  <p className="mb-2">
+                    Expectancy measures how much you expect to{' '}
+                    <b>make or lose per trade on average</b>.
+                  </p>
+
+                  <p className="mb-2">
+                    It tells you whether your strategy is profitable over time,
+                    not just how often you win.
+                  </p>
+
+                  <p className="mb-2 font-semibold">Formula:</p>
+                  <p className="mb-2">
+                    Expectancy = (Win Rate × Avg Win) + (Loss Rate × Avg Loss)
+                  </p>
+
+                  <p className="mb-2 font-semibold">How to read it:</p>
+                  <ul className="list-disc ml-4 space-y-1 mb-2">
+                    <li>Above 0 → profitable strategy</li>
+                    <li>Below 0 → losing strategy</li>
+                    <li>Higher value → stronger edge per trade</li>
+                  </ul>
+
+                  <p className="text-gray-300">
+                    ⚠️ Expectancy is more important than win rate because it
+                    factors in both probability and payoff size.
+                  </p>
                 </div>
-              ))}
+              </div>
+
+              <div className="p-3 border rounded-lg">
+                <p className="text-gray-500">Avg Trades / Day</p>
+                <p className="text-lg font-semibold">
+                  {avgTradesPerDay.toFixed(2)}
+                </p>
+              </div>
+
+              <div className="p-3 border rounded-lg">
+                <p className="text-gray-500">Moved Stops</p>
+
+                <p className="text-lg font-semibold">
+                  {movedStopsStats.total} trades
+                </p>
+
+                <p className="text-sm text-green-600">
+                  Protected: {movedStopsStats.success} (
+                  {movedStopsStats.pnlSuccess ?? 0})
+                </p>
+
+                <p className="text-sm text-red-600">
+                  Overmanaged: {movedStopsStats.fail} ({movedStopsStats.pnlFail}
+                  )
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Neutral: {movedStopsStats.neutral} (
+                  {movedStopsStats.pnlNeutral})
+                </p>
+
+                <p className="text-sm">
+                  Quality: {(movedStopsStats.quality || 0).toFixed(1)}%
+                </p>
+
+                <p
+                  className={`text-sm font-medium ${
+                    movedStopsStats.netImpact > 0
+                      ? 'text-green-600'
+                      : movedStopsStats.netImpact < 0
+                        ? 'text-red-600'
+                        : 'text-gray-500'
+                  }`}
+                >
+                  Net Impact: {movedStopsStats.netImpact > 0 ? '+' : ''}
+                  {movedStopsStats.netImpact}
+                </p>
+
+                {/* 🔥 THE REAL TRUTH METRIC */}
+                <p
+                  className={`text-sm font-semibold ${
+                    movedStopsStats.pnlImpact > 0
+                      ? 'text-green-600'
+                      : movedStopsStats.pnlImpact < 0
+                        ? 'text-red-600'
+                        : 'text-gray-500'
+                  }`}
+                >
+                  PnL Impact: {movedStopsStats.pnlImpact}
+                </p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Total (incl. neutral): {movedStopsStats.totalPnL}
+                </p>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl shadow">
+                <h3 className="font-semibold mb-2">Checklist Mistakes</h3>
+                <table className="w-full text-sm border-collapse mb-4">
+                  <tbody>
+                    {Object.entries(checklistTally).map(([type, count]) => (
+                      <tr key={type} className="border-b">
+                        <td className="p-2">{type}</td>
+                        <td className="p-2 text-right">{count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <h3 className="font-semibold mb-2">Behavioral Mistakes</h3>
+                <table className="w-full text-sm border-collapse">
+                  <tbody>
+                    {Object.entries(behavioralTally).map(([type, count]) => (
+                      <tr key={type} className="border-b">
+                        <td className="p-2">{type}</td>
+                        <td className="p-2 text-right">{count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
-          {/* EMOTION */}
-          <div>
-            <h3 className="font-semibold mb-2">By Emotion</h3>
-            <div className="grid md:grid-cols-2 gap-3 text-sm">
-              {emotionGroups.map((g) => (
-                <div key={g.label} className="border p-3 rounded-lg">
-                  <p className="font-medium">{g.label}</p>
-                  <p>Trades: {g.stats.trades}</p>
-                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                  <p>PnL: {g.stats.totalPnL}</p>
-                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* ===================== */}
+          {/* BREAKDOWN SECTION */}
+          {/* ===================== */}
 
-          {/* SCORE */}
-          <div>
-            <h3 className="font-semibold mb-2">By Checklist Score</h3>
-            <div className="grid md:grid-cols-3 gap-3 text-sm">
-              {scoreGroups.map((g) => (
-                <div key={g.label} className="border p-3 rounded-lg">
-                  <p className="font-medium">{g.label}</p>
-                  <p>Trades: {g.stats.trades}</p>
-                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                  <p>PnL: {g.stats.totalPnL}</p>
-                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div className="bg-white rounded-2xl shadow p-6 space-y-6">
+            <h2 className="text-xl font-semibold">Breakdown</h2>
 
-          {/* PAIR */}
-          <div>
-            <h3 className="font-semibold mb-2">By Pair</h3>
-
-            <div className="grid md:grid-cols-4 gap-3 text-sm">
-              {pairGroups.map((g) => (
-                <div key={g.label} className="border p-3 rounded-lg">
-                  <p className="font-medium">{g.label}</p>
-                  <p>Trades: {g.stats.trades}</p>
-                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                  <p>PnL: {g.stats.totalPnL}</p>
-                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* WEEKDAY PERFORMANCE */}
-          <div>
-            <h3 className="font-semibold mb-2">By Day of Week</h3>
-
-            <div className="grid md:grid-cols-4 gap-3 text-sm">
-              {weekdayGroups.map((g) => (
-                <div key={g.label} className="border p-3 rounded-lg">
-                  <p className="font-medium">{g.label}</p>
-                  <p>Trades: {g.stats.trades}</p>
-                  <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
-                  <p>PnL: {g.stats.totalPnL}</p>
-                  <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
-                  <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ===================== */}
-        {/* CHARTS */}
-        {/* ===================== */}
-
-        <div className="bg-white rounded-2xl shadow p-6 space-y-10">
-          <h2 className="text-xl font-semibold">Charts</h2>
-
-          {/* EQUITY CURVE */}
-          <div>
-            <h3 className="font-semibold mb-2">Equity Curve</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={equityData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="index" />
-                <YAxis />
-
-                {/* 🔥 CUSTOM TOOLTIP */}
-                <Tooltip content={<CustomTooltip />} />
-
-                {/* ONLY equity line */}
-                <Line
-                  type="monotone"
-                  dataKey="equity"
-                  stroke="#000"
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* WEEKDAY PNL */}
-          <div>
-            <h3 className="font-semibold mb-2">Analytics by Day of Week</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={weekdayChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-
-                {/* 🔥 IMPORTANT FIX FOR NEGATIVE VALUES */}
-                <YAxis domain={['auto', 'auto']} />
-
-                <Tooltip content={<AnalyticsTooltip />} />
-                <Bar dataKey="pnl" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* TRADE TYPE */}
-          <div>
-            <h3 className="font-semibold mb-2">Analytics by Trade Type</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={typeChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<AnalyticsTooltip />} />
-                <Bar dataKey="pnl" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* SESSION */}
-          <div>
-            <h3 className="font-semibold mb-2">Analytics by Session</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={sessionChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<AnalyticsTooltip />} />
-                <Bar dataKey="pnl" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* PAIR */}
-          <div>
-            <h3 className="font-semibold mb-2">Analytics by Pair</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={pairChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-
-                <YAxis domain={[0, 100]} />
-
-                <Tooltip content={<AnalyticsTooltip />} />
-                <Bar dataKey="winRate" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* EMOTION */}
-          <div>
-            <h3 className="font-semibold mb-2">Analytics by Emotion</h3>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={emotionChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<AnalyticsTooltip />} />
-                <Bar dataKey="pnl" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* TABLE */}
-        <div className="bg-white p-6 rounded-2xl shadow overflow-x-auto">
-          <table className="w-full text-sm border">
-            <thead className="bg-gray-100 text-left">
-              <tr>
-                <th className="border p-2">No.</th>
-                <th className="border p-2">Date</th>
-                <th className="border p-2">Entry</th>
-                <th className="border p-2">Exit</th>
-                <th className="border p-2">Session</th>
-                <th className="border p-2">Pair</th>
-                <th className="border p-2">Direction</th>
-                <th className="border p-2">Type</th>
-                <th className="border p-2">Risk %</th>
-                <th className="border p-2">Result</th>
-                <th className="border p-2">PnL</th>
-
-                <th className="border p-2">Score</th>
-                <th className="border p-2">Suggested Risk</th>
-                <th className="border p-2">Feeling</th>
-                <th className="border p-2">Moved Stops</th>
-                <th className="border p-2">Stop Worked</th>
-                <th className="border p-2">Mistakes</th>
-                <th className="border p-2">Remarks</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {[...enrichedTrades]
-                .sort(
-                  (a, b) =>
-                    new Date(b.date + 'T' + b.entryTime).getTime() -
-                    new Date(a.date + 'T' + a.entryTime).getTime()
-                )
-                .map((t, i, arr) => (
-                  <tr key={t.id || i} className="text-center">
-                    <td className="border p-2 font-semibold">
-                      {arr.length - i}
-                    </td>
-                    <td className="border p-2">{t.date}</td>
-                    <td className="border p-2">{t.entryTime}</td>
-                    <td className="border p-2">{t.exitTime}</td>
-                    <td className="border p-2">{t.session}</td>
-                    <td className="border p-2 font-mono text-blue-600">
-                      {t.pair || '-'}
-                    </td>
-                    <td className="border p-2">{t.direction}</td>
-                    <td className="border p-2">{t.type}</td>
-                    <td className="border p-2">{t.risk}</td>
-                    <td
-                      className={`border p-2 font-medium ${
-                        t.result === 'Win'
-                          ? 'text-green-600'
-                          : t.result === 'Loss'
-                            ? 'text-red-600'
-                            : 'text-gray-500'
-                      }`}
-                    >
-                      {t.result}
-                    </td>
-                    <td
-                      className={`border p-2 ${
-                        Number(t.amount) > 0
-                          ? 'text-green-600'
-                          : Number(t.amount) < 0
-                            ? 'text-red-600'
-                            : 'text-gray-500'
-                      }`}
-                    >
-                      {t.amount}
-                    </td>
-                    <td className="border p-2">{t.checklistScore}</td>
-                    <td className="border p-2 text-blue-600 font-semibold">
-                      {t.suggestedRisk}
-                    </td>
-                    <td className="border p-2">{t.feeling}</td>
-                    <td className="border p-2">
-                      {t.movedStops ? (
-                        <span className="text-blue-600 font-medium">
-                          Adjusted
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="border p-2">
-                      {!t.movedStops ? (
-                        '-'
-                      ) : t.movedStopsWorked === 'PROTECTED' ? (
-                        <span className="text-green-600 font-medium">
-                          Protected
-                        </span>
-                      ) : t.movedStopsWorked === 'OVERMANAGED' ? (
-                        <span className="text-red-600 font-medium">
-                          Overmanaged
-                        </span>
-                      ) : t.movedStopsWorked === 'IRRELEVANT' ? (
-                        <span className="text-gray-500">Neutral</span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="border p-2 text-left text-xs">
-                      <ul className="list-disc list-inside">
-                        {t.behavioralMistakes
-                          .filter((m) => m.category === 'behavioral')
-                          .map((m, idx) => (
-                            <li key={idx}>{m.type}</li>
-                          ))}
-                      </ul>
-                    </td>
-                    <td className="border p-2 text-left text-xs">
-                      {t.remarks || '-'}
-                    </td>
-                    <td className="border p-2 space-x-2">
-                      <button
-                        onClick={() => handleEdit(t)}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(t.id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
+            {/* SESSION */}
+            <div>
+              <h3 className="font-semibold mb-2">By Session</h3>
+              <div className="grid md:grid-cols-4 gap-3 text-sm">
+                {sessionGroups.map((g) => (
+                  <div key={g.label} className="border p-3 rounded-lg">
+                    <p className="font-medium">{g.label}</p>
+                    <p>Trades: {g.stats.trades}</p>
+                    <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                    <p>PnL: {g.stats.totalPnL}</p>
+                    <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                    <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  </div>
                 ))}
-            </tbody>
-          </table>
-          {showUndo && deletedTrade && (
-            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow flex items-center gap-4 z-50">
-              <span>Trade deleted</span>
-
-              <button
-                onClick={handleUndo}
-                className="text-green-400 font-semibold hover:underline"
-              >
-                Undo
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowUndo(false);
-                  setDeletedTrade(null);
-                }}
-                className="text-gray-400 hover:underline"
-              >
-                Dismiss
-              </button>
+              </div>
             </div>
-          )}
+
+            {/* TRADE TYPE */}
+            <div>
+              <h3 className="font-semibold mb-2">By Trade Type</h3>
+
+              <div className="grid md:grid-cols-3 gap-3 text-sm">
+                {typeGroups.map((g) => (
+                  <div key={g.label} className="border p-3 rounded-lg">
+                    <p className="font-medium">{g.label}</p>
+                    <p>Trades: {g.stats.trades}</p>
+                    <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                    <p>PnL: {g.stats.totalPnL}</p>
+                    <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                    <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* EMOTION */}
+            <div>
+              <h3 className="font-semibold mb-2">By Emotion</h3>
+              <div className="grid md:grid-cols-2 gap-3 text-sm">
+                {emotionGroups.map((g) => (
+                  <div key={g.label} className="border p-3 rounded-lg">
+                    <p className="font-medium">{g.label}</p>
+                    <p>Trades: {g.stats.trades}</p>
+                    <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                    <p>PnL: {g.stats.totalPnL}</p>
+                    <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                    <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SCORE */}
+            <div>
+              <h3 className="font-semibold mb-2">By Checklist Score</h3>
+              <div className="grid md:grid-cols-3 gap-3 text-sm">
+                {scoreGroups.map((g) => (
+                  <div key={g.label} className="border p-3 rounded-lg">
+                    <p className="font-medium">{g.label}</p>
+                    <p>Trades: {g.stats.trades}</p>
+                    <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                    <p>PnL: {g.stats.totalPnL}</p>
+                    <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                    <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PAIR */}
+            <div>
+              <h3 className="font-semibold mb-2">By Pair</h3>
+
+              <div className="grid md:grid-cols-4 gap-3 text-sm">
+                {pairGroups.map((g) => (
+                  <div key={g.label} className="border p-3 rounded-lg">
+                    <p className="font-medium">{g.label}</p>
+                    <p>Trades: {g.stats.trades}</p>
+                    <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                    <p>PnL: {g.stats.totalPnL}</p>
+                    <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                    <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* WEEKDAY PERFORMANCE */}
+            <div>
+              <h3 className="font-semibold mb-2">By Day of Week</h3>
+
+              <div className="grid md:grid-cols-4 gap-3 text-sm">
+                {weekdayGroups.map((g) => (
+                  <div key={g.label} className="border p-3 rounded-lg">
+                    <p className="font-medium">{g.label}</p>
+                    <p>Trades: {g.stats.trades}</p>
+                    <p>Win Rate: {g.stats.winRate.toFixed(1)}%</p>
+                    <p>PnL: {g.stats.totalPnL}</p>
+                    <p>PF: {g.stats.profitFactor.toFixed(2)}</p>
+                    <p>Exp: {g.stats.expectancy.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ===================== */}
+          {/* CHARTS */}
+          {/* ===================== */}
+
+          <div className="bg-white rounded-2xl shadow p-6 space-y-10">
+            <h2 className="text-xl font-semibold">Charts</h2>
+
+            {/* EQUITY CURVE */}
+            <div>
+              <h3 className="font-semibold mb-2">Equity Curve</h3>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={equityData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="index" />
+                  <YAxis />
+
+                  {/* 🔥 CUSTOM TOOLTIP */}
+                  <Tooltip content={<CustomTooltip />} />
+
+                  {/* ONLY equity line */}
+                  <Line
+                    type="monotone"
+                    dataKey="equity"
+                    stroke="#000"
+                    dot={{ r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* WEEKDAY PNL */}
+            <div>
+              <h3 className="font-semibold mb-2">Analytics by Day of Week</h3>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={weekdayChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+
+                  {/* 🔥 IMPORTANT FIX FOR NEGATIVE VALUES */}
+                  <YAxis domain={['auto', 'auto']} />
+
+                  <Tooltip content={<AnalyticsTooltip />} />
+                  <Bar dataKey="pnl" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* TRADE TYPE */}
+            <div>
+              <h3 className="font-semibold mb-2">Analytics by Trade Type</h3>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={typeChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={<AnalyticsTooltip />} />
+                  <Bar dataKey="pnl" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* SESSION */}
+            <div>
+              <h3 className="font-semibold mb-2">Analytics by Session</h3>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={sessionChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={<AnalyticsTooltip />} />
+                  <Bar dataKey="pnl" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* PAIR */}
+            <div>
+              <h3 className="font-semibold mb-2">Analytics by Pair</h3>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={pairChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+
+                  <YAxis domain={[0, 100]} />
+
+                  <Tooltip content={<AnalyticsTooltip />} />
+                  <Bar dataKey="winRate" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* EMOTION */}
+            <div>
+              <h3 className="font-semibold mb-2">Analytics by Emotion</h3>
+
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={emotionChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip content={<AnalyticsTooltip />} />
+                  <Bar dataKey="pnl" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* TABLE */}
+          <div className="bg-white p-6 rounded-2xl shadow overflow-x-auto">
+            <table className="w-full text-sm border">
+              <thead className="bg-gray-100 text-left">
+                <tr>
+                  <th className="border p-2">No.</th>
+                  <th className="border p-2">Date</th>
+                  <th className="border p-2">Entry</th>
+                  <th className="border p-2">Exit</th>
+                  <th className="border p-2">Session</th>
+                  <th className="border p-2">Pair</th>
+                  <th className="border p-2">Direction</th>
+                  <th className="border p-2">Type</th>
+                  <th className="border p-2">Risk %</th>
+                  <th className="border p-2">Result</th>
+                  <th className="border p-2">PnL</th>
+
+                  <th className="border p-2">Score</th>
+                  <th className="border p-2">Suggested Risk</th>
+                  <th className="border p-2">Feeling</th>
+                  <th className="border p-2">Moved Stops</th>
+                  <th className="border p-2">Stop Worked</th>
+                  <th className="border p-2">Mistakes</th>
+                  <th className="border p-2">Remarks</th>
+                  <th className="border p-2">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {[...enrichedTrades]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.date + 'T' + b.entryTime).getTime() -
+                      new Date(a.date + 'T' + a.entryTime).getTime()
+                  )
+                  .map((t, i, arr) => (
+                    <tr key={t.id || i} className="text-center">
+                      <td className="border p-2 font-semibold">
+                        {arr.length - i}
+                      </td>
+                      <td className="border p-2">{t.date}</td>
+                      <td className="border p-2">{t.entryTime}</td>
+                      <td className="border p-2">{t.exitTime}</td>
+                      <td className="border p-2">{t.session}</td>
+                      <td className="border p-2 font-mono text-blue-600">
+                        {t.pair || '-'}
+                      </td>
+                      <td className="border p-2">{t.direction}</td>
+                      <td className="border p-2">{t.type}</td>
+                      <td className="border p-2">{t.risk}</td>
+                      <td
+                        className={`border p-2 font-medium ${
+                          t.result === 'Win'
+                            ? 'text-green-600'
+                            : t.result === 'Loss'
+                              ? 'text-red-600'
+                              : 'text-gray-500'
+                        }`}
+                      >
+                        {t.result}
+                      </td>
+                      <td
+                        className={`border p-2 ${
+                          Number(t.amount) > 0
+                            ? 'text-green-600'
+                            : Number(t.amount) < 0
+                              ? 'text-red-600'
+                              : 'text-gray-500'
+                        }`}
+                      >
+                        {t.amount}
+                      </td>
+                      <td className="border p-2">{t.checklistScore}</td>
+                      <td className="border p-2 text-blue-600 font-semibold">
+                        {t.suggestedRisk}
+                      </td>
+                      <td className="border p-2">{t.feeling}</td>
+                      <td className="border p-2">
+                        {t.movedStops ? (
+                          <span className="text-blue-600 font-medium">
+                            Adjusted
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="border p-2">
+                        {!t.movedStops ? (
+                          '-'
+                        ) : t.movedStopsWorked === 'PROTECTED' ? (
+                          <span className="text-green-600 font-medium">
+                            Protected
+                          </span>
+                        ) : t.movedStopsWorked === 'OVERMANAGED' ? (
+                          <span className="text-red-600 font-medium">
+                            Overmanaged
+                          </span>
+                        ) : t.movedStopsWorked === 'IRRELEVANT' ? (
+                          <span className="text-gray-500">Neutral</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="border p-2 text-left text-xs">
+                        <ul className="list-disc list-inside">
+                          {t.behavioralMistakes
+                            .filter((m) => m.category === 'behavioral')
+                            .map((m, idx) => (
+                              <li key={idx}>{m.type}</li>
+                            ))}
+                        </ul>
+                      </td>
+                      <td className="border p-2 text-left text-xs">
+                        {t.remarks || '-'}
+                      </td>
+                      <td className="border p-2 space-x-2">
+                        <button
+                          onClick={() => handleEdit(t)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t.id)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+            {showUndo && deletedTrade && (
+              <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow flex items-center gap-4 z-50">
+                <span>Trade deleted</span>
+
+                <button
+                  onClick={handleUndo}
+                  className="text-green-400 font-semibold hover:underline"
+                >
+                  Undo
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowUndo(false);
+                    setDeletedTrade(null);
+                  }}
+                  className="text-gray-400 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
