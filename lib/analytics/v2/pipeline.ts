@@ -48,16 +48,79 @@ const computeGroupStats = (items: Trade[]) => {
   };
 };
 
+const tallyMistakes = (trades: Trade[], checklistRules: any) => {
+  const checklistTally: Record<string, number> = {};
+  const behavioralTally: Record<string, number> = {};
+
+  Object.keys(checklistRules).forEach((key) => {
+    checklistTally[checklistRules[key].type] = 0;
+  });
+
+  trades.forEach((t) => {
+    const mistakes = (t as any).behavioralMistakes || [];
+
+    mistakes.forEach((m: any) => {
+      if (m.category === 'checklist') {
+        checklistTally[m.type] = (checklistTally[m.type] || 0) + 1;
+      } else if (m.category === 'behavioral') {
+        behavioralTally[m.type] = (behavioralTally[m.type] || 0) + 1;
+      }
+    });
+  });
+
+  const sortTally = (tally: Record<string, number>) =>
+    Object.fromEntries(Object.entries(tally).sort(([, a], [, b]) => b - a));
+
+  return {
+    checklistTally: sortTally(checklistTally),
+    behavioralTally: sortTally(behavioralTally),
+  };
+};
+
 const buildGroup = (label: string, items: Trade[]) => ({
   label,
   stats: computeGroupStats(items),
 });
 
-export const buildTradeAnalytics = (trades: Trade[]) => {
+export const applyFilters = (trades: Trade[], filters: any) => {
+  return trades.filter((t) => {
+    const sessionMatch =
+      filters.session?.length === 0 || filters.session?.includes(t.session);
+
+    const resultMatch =
+      filters.result?.length === 0 || filters.result?.includes(t.result);
+
+    const pairMatch =
+      filters.pair?.length === 0 || filters.pair?.includes(t.pair);
+
+    const feelingMatch =
+      filters.feeling?.length === 0 || filters.feeling?.includes(t.feeling);
+
+    const startMatch = filters.startDate
+      ? new Date(t.date) >= new Date(filters.startDate)
+      : true;
+
+    const endMatch = filters.endDate
+      ? new Date(t.date) <= new Date(filters.endDate)
+      : true;
+
+    return (
+      sessionMatch &&
+      resultMatch &&
+      pairMatch &&
+      feelingMatch &&
+      startMatch &&
+      endMatch
+    );
+  });
+};
+
+export const buildTradeAnalytics = (trades: Trade[], filters?: any) => {
+  const filteredTrades = filters ? applyFilters(trades, filters) : trades;
   // =====================
   // ENRICHED TRADES (basic normalization)
   // =====================
-  const enrichedTrades = [...trades]
+  const enrichedTrades = [...filteredTrades]
     .sort(
       (a, b) =>
         new Date(`${b.date}T${b.entryTime}`).getTime() -
@@ -384,5 +447,6 @@ export const buildTradeAnalytics = (trades: Trade[]) => {
     mistakeSummary,
     mistakeCost,
     equityData,
+    tallyMistakes,
   };
 };

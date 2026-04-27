@@ -52,7 +52,6 @@ export const useTradeAnalyticsV2 = (
     return {
       ...analytics,
 
-      // HARD GUARANTEE: prevent undefined crash cascade
       enrichedTrades: analytics.enrichedTrades ?? [],
 
       winRate: safeNumber(analytics.winRate),
