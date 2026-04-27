@@ -512,14 +512,8 @@ export default function Home() {
     };
   };
 
-  // Map trades to include behavioralMistakes
-  const tradesWithMistakes = trades.map((t) => ({
-    ...t,
-    behavioralMistakes: detectMistakes(t),
-  }));
-
   const { checklistTally, behavioralTally } = tallyMistakes(
-    tradesWithMistakes,
+    enrichedTrades,
     checklistRules
   );
 
