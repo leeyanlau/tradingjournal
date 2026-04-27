@@ -113,7 +113,7 @@ export default function Home() {
   useEffect(() => {
     const saved = tradeStorage.get();
 
-    if (!saved) {
+    if (saved.length === 0) {
       const withMistakes = dummyTrades.map((t) => ({
         ...t,
         behavioralMistakes: detectMistakes(t),
