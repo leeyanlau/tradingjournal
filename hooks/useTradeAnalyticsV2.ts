@@ -62,6 +62,10 @@ export const useTradeAnalyticsV2 = (
       expectancy: safeNumber(analytics.expectancy),
       avgTradesPerDay: safeNumber(analytics.avgTradesPerDay),
 
+      winCount: analytics.winCount,
+      lossCount: analytics.lossCount,
+      breakevenCount: analytics.breakevenCount,
+
       movedStopsStats: analytics.movedStopsStats ?? {
         total: 0,
         success: 0,

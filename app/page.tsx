@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Trade, MovedStopResult } from '@/types/trade';
 import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
+import { useTradeCharts } from '@/hooks/useTradeCharts';
 import { tradeStorage } from '@/lib/storage/tradeStorage';
 
 import { getSession } from '@/utils/getSession';
@@ -26,6 +27,8 @@ import {
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import KPICards from '@/components/dashboard/KPICards';
 import { MovedStopsCard } from '@/components/dashboard/moved-stops-card';
+import { BaseBarChart } from '@/components/charts/BaseBarChart';
+import { EquityChart } from '@/components/charts/EquityChart';
 
 // --------------------
 // TYPES
@@ -308,35 +311,14 @@ export default function Home() {
   // --------------------
   const analytics = useTradeAnalyticsV2(trades, filters);
 
-  const {
-    enrichedTrades,
-    winRate,
-    winCount,
-    lossCount,
-    breakevenCount,
-    totalPnL,
-    avgWin,
-    avgLoss,
-    profitFactor,
-    expectancy,
-    avgTradesPerDay,
-    movedStopsStats,
-    mistakeSummary,
-    mistakeCost,
-    equityData,
-    sessionGroups,
-    typeGroups,
-    emotionGroups,
-    scoreGroups,
-    pairGroups,
-    weekdayGroups,
-    weekdayChartData,
-    typeChartData,
-    sessionChartData,
-    pairChartData,
-    emotionChartData,
-    pairSuggestions,
-  } = analytics;
+  const charts = useTradeCharts(
+    analytics.enrichedTrades,
+    analytics.sessionGroups,
+    analytics.weekdayGroups,
+    analytics.emotionGroups,
+    analytics.typeGroups,
+    analytics.pairGroups
+  );
 
   // --------------------
   // FILTER TOGGLE HANDLER
@@ -405,9 +387,9 @@ export default function Home() {
 
   const allPairs = useMemo(() => {
     return Array.from(
-      new Set(enrichedTrades.map((t) => t.pair).filter(Boolean))
+      new Set(analytics.enrichedTrades.map((t) => t.pair).filter(Boolean))
     );
-  }, [enrichedTrades]);
+  }, [analytics.enrichedTrades]);
 
   const filteredPairs = useMemo(() => {
     const base = allPairs || [];
@@ -475,12 +457,12 @@ export default function Home() {
   // --------------------
   const tradesPerDayMap = useMemo(() => {
     const map: Record<string, number> = {};
-    enrichedTrades.forEach((t) => {
+    analytics.enrichedTrades.forEach((t) => {
       if (!t.date) return;
       map[t.date] = (map[t.date] || 0) + 1;
     });
     return map;
-  }, [enrichedTrades]);
+  }, [analytics.enrichedTrades]);
 
   const tallyMistakes = (trades: Trade[], rules: typeof checklistRules) => {
     // Initialize all checklist mistakes to 0
@@ -513,7 +495,7 @@ export default function Home() {
   };
 
   const { checklistTally, behavioralTally } = tallyMistakes(
-    enrichedTrades,
+    analytics.enrichedTrades,
     checklistRules
   );
 
@@ -789,7 +771,7 @@ export default function Home() {
 
             <MultiSelectDropdown
               label="Pairs"
-              options={pairSuggestions}
+              options={analytics.pairSuggestions}
               selected={filters.pair}
               onToggle={(v) => toggleFilter('pair', v)}
             />
@@ -842,12 +824,12 @@ export default function Home() {
           <KPICards
             stats={analytics}
             breakdown={{
-              winCount,
-              lossCount,
-              breakevenCount,
+              winCount: analytics.winCount,
+              lossCount: analytics.lossCount,
+              breakevenCount: analytics.breakevenCount,
             }}
           />
-          <MovedStopsCard stats={movedStopsStats} />
+          <MovedStopsCard stats={analytics.movedStopsStats} />
 
           <div className="bg-white rounded-2xl shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Analytics</h2>
@@ -862,7 +844,7 @@ export default function Home() {
                 </p>
 
                 <p className="text-lg font-semibold text-blue-600">
-                  {winRate.toFixed(2)}%
+                  {analytics.winRate.toFixed(2)}%
                 </p>
 
                 {/* TOOLTIP */}
@@ -883,9 +865,9 @@ export default function Home() {
                   <p className="mb-2">Breakdown:</p>
 
                   <ul className="list-disc ml-4 space-y-1 mb-2">
-                    <li>Wins: {winCount}</li>
-                    <li>Losses: {lossCount}</li>
-                    <li>Breakeven: {breakevenCount}</li>
+                    <li>Wins: {analytics.winCount}</li>
+                    <li>Losses: {analytics.lossCount}</li>
+                    <li>Breakeven: {analytics.breakevenCount}</li>
                   </ul>
 
                   <p className="text-gray-300">
@@ -899,23 +881,23 @@ export default function Home() {
               <div className="p-3 border rounded-lg">
                 <p className="text-gray-500">Total PnL</p>
                 <p
-                  className={`text-lg font-semibold ${totalPnL > 0 ? 'text-green-600' : totalPnL < 0 ? 'text-red-600' : ''}`}
+                  className={`text-lg font-semibold ${analytics.totalPnL > 0 ? 'text-green-600' : analytics.totalPnL < 0 ? 'text-red-600' : ''}`}
                 >
-                  {totalPnL}
+                  {analytics.totalPnL}
                 </p>
               </div>
 
               <div className="p-3 border rounded-lg">
                 <p className="text-gray-500">Avg Win</p>
                 <p className="text-lg font-semibold text-green-600">
-                  {avgWin.toFixed(2)}
+                  {analytics.avgWin.toFixed(2)}
                 </p>
               </div>
 
               <div className="p-3 border rounded-lg">
                 <p className="text-gray-500">Avg Loss</p>
                 <p className="text-lg font-semibold text-red-600">
-                  {avgLoss.toFixed(2)}
+                  {analytics.avgLoss.toFixed(2)}
                 </p>
               </div>
 
@@ -930,14 +912,14 @@ export default function Home() {
 
                 <p
                   className={`text-lg font-semibold ${
-                    profitFactor > 1.5
+                    analytics.profitFactor > 1.5
                       ? 'text-green-600'
-                      : profitFactor < 1
+                      : analytics.profitFactor < 1
                         ? 'text-red-600'
                         : 'text-yellow-600'
                   }`}
                 >
-                  {profitFactor.toFixed(2)}
+                  {analytics.profitFactor.toFixed(2)}
                 </p>
 
                 {/* TOOLTIP */}
@@ -972,9 +954,9 @@ export default function Home() {
                 </p>
 
                 <p
-                  className={`text-lg font-semibold ${expectancy > 0 ? 'text-green-600' : expectancy < 0 ? 'text-red-600' : ''}`}
+                  className={`text-lg font-semibold ${analytics.expectancy > 0 ? 'text-green-600' : analytics.expectancy < 0 ? 'text-red-600' : ''}`}
                 >
-                  {expectancy.toFixed(2)}
+                  {analytics.expectancy.toFixed(2)}
                 </p>
 
                 {/* TOOLTIP */}
@@ -1013,7 +995,7 @@ export default function Home() {
               <div className="p-3 border rounded-lg">
                 <p className="text-gray-500">Avg Trades / Day</p>
                 <p className="text-lg font-semibold">
-                  {avgTradesPerDay.toFixed(2)}
+                  {analytics.avgTradesPerDay.toFixed(2)}
                 </p>
               </div>
 
@@ -1056,7 +1038,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold mb-2">By Session</h3>
               <div className="grid md:grid-cols-4 gap-3 text-sm">
-                {sessionGroups.map((g) => (
+                {analytics.sessionGroups.map((g) => (
                   <div key={g.label} className="border p-3 rounded-lg">
                     <p className="font-medium">{g.label}</p>
                     <p>Trades: {g.stats.trades}</p>
@@ -1074,7 +1056,7 @@ export default function Home() {
               <h3 className="font-semibold mb-2">By Trade Type</h3>
 
               <div className="grid md:grid-cols-3 gap-3 text-sm">
-                {typeGroups.map((g) => (
+                {analytics.typeGroups.map((g) => (
                   <div key={g.label} className="border p-3 rounded-lg">
                     <p className="font-medium">{g.label}</p>
                     <p>Trades: {g.stats.trades}</p>
@@ -1091,7 +1073,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold mb-2">By Emotion</h3>
               <div className="grid md:grid-cols-2 gap-3 text-sm">
-                {emotionGroups.map((g) => (
+                {analytics.emotionGroups.map((g) => (
                   <div key={g.label} className="border p-3 rounded-lg">
                     <p className="font-medium">{g.label}</p>
                     <p>Trades: {g.stats.trades}</p>
@@ -1108,7 +1090,7 @@ export default function Home() {
             <div>
               <h3 className="font-semibold mb-2">By Checklist Score</h3>
               <div className="grid md:grid-cols-3 gap-3 text-sm">
-                {scoreGroups.map((g) => (
+                {analytics.scoreGroups.map((g) => (
                   <div key={g.label} className="border p-3 rounded-lg">
                     <p className="font-medium">{g.label}</p>
                     <p>Trades: {g.stats.trades}</p>
@@ -1126,7 +1108,7 @@ export default function Home() {
               <h3 className="font-semibold mb-2">By Pair</h3>
 
               <div className="grid md:grid-cols-4 gap-3 text-sm">
-                {pairGroups.map((g) => (
+                {analytics.pairGroups.map((g) => (
                   <div key={g.label} className="border p-3 rounded-lg">
                     <p className="font-medium">{g.label}</p>
                     <p>Trades: {g.stats.trades}</p>
@@ -1143,7 +1125,7 @@ export default function Home() {
               <h3 className="font-semibold mb-2">By Day of Week</h3>
 
               <div className="grid md:grid-cols-4 gap-3 text-sm">
-                {weekdayGroups.map((g) => (
+                {analytics.weekdayGroups.map((g) => (
                   <div key={g.label} className="border p-3 rounded-lg">
                     <p className="font-medium">{g.label}</p>
                     <p>Trades: {g.stats.trades}</p>
@@ -1165,107 +1147,30 @@ export default function Home() {
             <h2 className="text-xl font-semibold">Charts</h2>
 
             {/* EQUITY CURVE */}
-            <div>
-              <h3 className="font-semibold mb-2">Equity Curve</h3>
-
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={equityData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="index" />
-                  <YAxis />
-
-                  {/* 🔥 CUSTOM TOOLTIP */}
-                  <Tooltip content={<CustomTooltip />} />
-
-                  {/* ONLY equity line */}
-                  <Line
-                    type="monotone"
-                    dataKey="equity"
-                    stroke="#000"
-                    dot={{ r: 3 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="w-full">
+              <EquityChart data={charts.equityCurve} />
             </div>
-
-            {/* WEEKDAY PNL */}
-            <div>
-              <h3 className="font-semibold mb-2">Analytics by Day of Week</h3>
-
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={weekdayChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-
-                  {/* 🔥 IMPORTANT FIX FOR NEGATIVE VALUES */}
-                  <YAxis domain={['auto', 'auto']} />
-
-                  <Tooltip content={<AnalyticsTooltip />} />
-                  <Bar dataKey="pnl" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* TRADE TYPE */}
-            <div>
-              <h3 className="font-semibold mb-2">Analytics by Trade Type</h3>
-
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={typeChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip content={<AnalyticsTooltip />} />
-                  <Bar dataKey="pnl" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* SESSION */}
-            <div>
-              <h3 className="font-semibold mb-2">Analytics by Session</h3>
-
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={sessionChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip content={<AnalyticsTooltip />} />
-                  <Bar dataKey="pnl" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* PAIR */}
-            <div>
-              <h3 className="font-semibold mb-2">Analytics by Pair</h3>
-
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={pairChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-
-                  <YAxis domain={[0, 100]} />
-
-                  <Tooltip content={<AnalyticsTooltip />} />
-                  <Bar dataKey="winRate" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* EMOTION */}
-            <div>
-              <h3 className="font-semibold mb-2">Analytics by Emotion</h3>
-
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={emotionChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip content={<AnalyticsTooltip />} />
-                  <Bar dataKey="pnl" />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+              <BaseBarChart
+                title="Analytics by Day of Week"
+                data={charts.weekdayChartData}
+              />
+              <BaseBarChart
+                title="Analytics by Trade Type"
+                data={charts.typeChartData}
+              />
+              <BaseBarChart
+                title="Analytics by Session"
+                data={charts.sessionChartData}
+              />
+              <BaseBarChart
+                title="Analytics by Pair"
+                data={charts.pairChartData}
+              />
+              <BaseBarChart
+                title="Analytics by Emotion"
+                data={charts.emotionChartData}
+              />
             </div>
           </div>
 
@@ -1298,7 +1203,7 @@ export default function Home() {
               </thead>
 
               <tbody>
-                {[...enrichedTrades]
+                {[...analytics.enrichedTrades]
                   .sort(
                     (a, b) =>
                       new Date(b.date + 'T' + b.entryTime).getTime() -
