@@ -25,6 +25,7 @@ import {
 
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import KPICards from '@/components/dashboard/KPICards';
+import { MovedStopsCard } from '@/components/dashboard/moved-stops-card';
 
 // --------------------
 // TYPES
@@ -518,7 +519,6 @@ export default function Home() {
 
   return (
     <DashboardLayout>
-      <KPICards stats={analytics} />
       <div className="min-h-screen bg-gray-100 p-4 md:p-8">
         <div className="max-w-5xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold text-center">Trading Journal</h1>
@@ -839,6 +839,16 @@ export default function Home() {
           </div>
 
           {/* ANALYTICS DASHBOARD */}
+          <KPICards
+            stats={analytics}
+            breakdown={{
+              winCount,
+              lossCount,
+              breakevenCount,
+            }}
+          />
+          <MovedStopsCard stats={movedStopsStats} />
+
           <div className="bg-white rounded-2xl shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Analytics</h2>
 
@@ -1004,63 +1014,6 @@ export default function Home() {
                 <p className="text-gray-500">Avg Trades / Day</p>
                 <p className="text-lg font-semibold">
                   {avgTradesPerDay.toFixed(2)}
-                </p>
-              </div>
-
-              <div className="p-3 border rounded-lg">
-                <p className="text-gray-500">Moved Stops</p>
-
-                <p className="text-lg font-semibold">
-                  {movedStopsStats.total} trades
-                </p>
-
-                <p className="text-sm text-green-600">
-                  Protected: {movedStopsStats.success} (
-                  {movedStopsStats.pnlSuccess ?? 0})
-                </p>
-
-                <p className="text-sm text-red-600">
-                  Overmanaged: {movedStopsStats.fail} ({movedStopsStats.pnlFail}
-                  )
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  Neutral: {movedStopsStats.neutral} (
-                  {movedStopsStats.pnlNeutral})
-                </p>
-
-                <p className="text-sm">
-                  Quality: {(movedStopsStats.quality || 0).toFixed(1)}%
-                </p>
-
-                <p
-                  className={`text-sm font-medium ${
-                    movedStopsStats.netImpact > 0
-                      ? 'text-green-600'
-                      : movedStopsStats.netImpact < 0
-                        ? 'text-red-600'
-                        : 'text-gray-500'
-                  }`}
-                >
-                  Net Impact: {movedStopsStats.netImpact > 0 ? '+' : ''}
-                  {movedStopsStats.netImpact}
-                </p>
-
-                {/* 🔥 THE REAL TRUTH METRIC */}
-                <p
-                  className={`text-sm font-semibold ${
-                    movedStopsStats.pnlImpact > 0
-                      ? 'text-green-600'
-                      : movedStopsStats.pnlImpact < 0
-                        ? 'text-red-600'
-                        : 'text-gray-500'
-                  }`}
-                >
-                  PnL Impact: {movedStopsStats.pnlImpact}
-                </p>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  Total (incl. neutral): {movedStopsStats.totalPnL}
                 </p>
               </div>
 

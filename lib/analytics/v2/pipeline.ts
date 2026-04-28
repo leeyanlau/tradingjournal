@@ -342,6 +342,8 @@ export const buildTradeAnalytics = (trades: Trade[], filters?: any) => {
 
   const safeAmount = (v: any) => Number(v || 0);
 
+  const decisionTrades = successTrades.length + failTrades.length;
+
   const movedStopsStats = {
     total: movedStopsTrades.length,
     success: successTrades.length,
@@ -354,9 +356,7 @@ export const buildTradeAnalytics = (trades: Trade[], filters?: any) => {
 
     totalPnL: movedStopsTrades.reduce((s, t) => s + safeAmount(t.amount), 0),
 
-    quality: movedStopsTrades.length
-      ? (successTrades.length / movedStopsTrades.length) * 100
-      : 0,
+    quality: decisionTrades ? (successTrades.length / decisionTrades) * 100 : 0,
 
     netImpact: successTrades.length - failTrades.length,
     pnlImpact:
