@@ -52,6 +52,7 @@ export default function KPICards({ stats, breakdown }: Props) {
               : 'down'
             : 'neutral'
         }
+        size="lg"
       />
       <KpiCard
         label="Total PnL"
@@ -91,6 +92,7 @@ export default function KPICards({ stats, breakdown }: Props) {
                 : 'neutral'
             : 'neutral'
         }
+        size="lg"
       />
       <KpiCard
         label="Expectancy"
@@ -123,6 +125,7 @@ export default function KPICards({ stats, breakdown }: Props) {
               : 'down'
             : 'neutral'
         }
+        size="lg"
       />
     </div>
   );

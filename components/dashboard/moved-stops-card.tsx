@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
+import { metricValueClass } from '@/components/ui/metricStyles';
 
 type Props = {
   stats: {
@@ -37,7 +38,7 @@ export function MovedStopsCard({ stats }: Props) {
         {/* 🔥 HEADLINE METRIC */}
         <div>
           <p className="text-sm text-muted-foreground">PnL Impact</p>
-          <p className={`text-3xl font-bold ${impactColor}`}>
+          <p className={`${metricValueClass} ${impactColor}`}>
             {stats.pnlImpact > 0 ? '+' : ''}
             {stats.pnlImpact}
           </p>

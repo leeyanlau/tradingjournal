@@ -1,13 +1,11 @@
 import { TooltipProps } from 'recharts';
 
-export function AnalyticsTooltip({
-  active,
-  payload,
-  label,
-}: TooltipProps<any, any>) {
+export function AnalyticsTooltip(props: any) {
+  const { active, payload, label } = props;
+
   if (!active || !payload?.length) return null;
 
-  const data = payload[0].payload;
+  const data = payload[0]?.payload;
 
   return (
     <div className="bg-black text-white p-3 rounded-lg text-xs space-y-1 min-w-[180px]">
