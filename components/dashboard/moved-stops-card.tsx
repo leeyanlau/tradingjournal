@@ -94,18 +94,22 @@ export function MovedStopsCard({ stats }: Props) {
 
         {/* 📉 BREAKDOWN */}
         <div className="grid grid-cols-3 gap-2 text-sm">
-          <div className="bg-green-50 rounded-lg p-2 text-center">
-            <p className="text-green-600 font-semibold">{stats.success}</p>
+          <div className="rounded-lg p-2 text-center bg-green-100 dark:bg-green-900/30">
+            <p className="text-green-600 dark:text-green-400 font-semibold">
+              {stats.success}
+            </p>
             <p className="text-xs text-muted-foreground">Protected</p>
           </div>
 
-          <div className="bg-red-50 rounded-lg p-2 text-center">
-            <p className="text-red-600 font-semibold">{stats.fail}</p>
+          <div className="rounded-lg p-2 text-center bg-red-100 dark:bg-red-900/30">
+            <p className="text-red-600 dark:text-red-400 font-semibold">
+              {stats.fail}
+            </p>
             <p className="text-xs text-muted-foreground">Overmanaged</p>
           </div>
 
-          <div className="bg-gray-100 rounded-lg p-2 text-center">
-            <p className="font-semibold">{stats.neutral}</p>
+          <div className="rounded-lg p-2 text-center bg-gray-100 dark:bg-gray-800">
+            <p className="font-semibold text-foreground">{stats.neutral}</p>
             <p className="text-xs text-muted-foreground">Neutral</p>
           </div>
         </div>

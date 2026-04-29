@@ -29,6 +29,7 @@ import KPICards from '@/components/dashboard/KPICards';
 import { MovedStopsCard } from '@/components/dashboard/moved-stops-card';
 import { BaseBarChart } from '@/components/charts/BaseBarChart';
 import { EquityChart } from '@/components/charts/EquityChart';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 // --------------------
 // TYPES
@@ -365,7 +366,7 @@ export default function Home() {
         </button>
 
         {open && (
-          <div className="absolute z-10 bg-white border mt-1 w-full rounded shadow max-h-48 overflow-auto">
+          <div className="absolute z-10 bg-card border mt-1 w-full rounded shadow max-h-48 overflow-auto">
             {options.map((opt) => (
               <label
                 key={opt}
@@ -501,12 +502,15 @@ export default function Home() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-100 p-4 md:p-8">
+      <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
         <div className="max-w-5xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold text-center">Trading Journal</h1>
+          <div className="flex justify-end mb-4">
+            <ThemeToggle />
+          </div>
 
           {/* FORM */}
-          <div className="bg-white p-6 rounded-2xl shadow space-y-4">
+          <div className="bg-card p-6 rounded-2xl shadow space-y-4">
             <h2 className="text-xl font-semibold">Add Trade</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -517,7 +521,7 @@ export default function Home() {
                   name="date"
                   value={trade.date}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                   required
                 />
 
@@ -526,7 +530,7 @@ export default function Home() {
                   name="entryTime"
                   value={trade.entryTime}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                   required
                 />
 
@@ -535,7 +539,7 @@ export default function Home() {
                   name="exitTime"
                   value={trade.exitTime}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                   required
                 />
               </div>
@@ -551,11 +555,11 @@ export default function Home() {
                     setShowPairDropdown(true);
                   }}
                   onFocus={() => setShowPairDropdown(true)}
-                  className="border p-2 rounded-lg w-full"
+                  className="border p-2 rounded-lg w-full bg-background"
                 />
 
                 {showPairDropdown && filteredPairs.length > 0 && (
-                  <div className="absolute z-10 bg-white border w-full mt-1 rounded shadow max-h-40 overflow-auto">
+                  <div className="absolute z-10 bg-background border w-full mt-1 rounded shadow max-h-40 overflow-auto">
                     {filteredPairs.map((p) => (
                       <div
                         key={p}
@@ -574,17 +578,17 @@ export default function Home() {
               </div>
 
               {/* SESSION DISPLAY */}
-              <div className="border p-2 rounded-lg bg-gray-50 flex flex-col justify-center">
-                <label className="text-xs text-gray-400 mb-1">
+              <div className="border p-2 rounded-lg bg-background flex flex-col justify-center">
+                <label className="text-xs text-muted-foreground mb-1">
                   Session (auto-detected)
                 </label>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-800">
+                  <span className="text-sm font-medium text-foreground">
                     {trade.session || '-'}
                   </span>
 
-                  <span className="text-xs text-gray-400">🔒</span>
+                  <span className="text-xs text-muted-foreground">🔒</span>
                 </div>
               </div>
 
@@ -594,7 +598,7 @@ export default function Home() {
                   name="direction"
                   value={trade.direction}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                 >
                   <option>Buy</option>
                   <option>Sell</option>
@@ -604,7 +608,7 @@ export default function Home() {
                   name="type"
                   value={trade.type}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                 >
                   <option>Scalp</option>
                   <option>Day Trade</option>
@@ -615,7 +619,7 @@ export default function Home() {
                   name="result"
                   value={trade.result}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                 >
                   <option>Win</option>
                   <option>Loss</option>
@@ -626,7 +630,7 @@ export default function Home() {
                   name="feeling"
                   value={trade.feeling}
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                 >
                   <option>Calm</option>
                   <option>Anxious</option>
@@ -640,7 +644,7 @@ export default function Home() {
                   value={trade.risk}
                   placeholder="Risk %"
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                   required
                 />
 
@@ -649,7 +653,7 @@ export default function Home() {
                   value={trade.amount}
                   placeholder="PnL (auto +/-)"
                   onChange={handleChange}
-                  className="border p-2 rounded-lg"
+                  className="border border-border bg-background p-2 rounded-lg"
                   required
                 />
               </div>
@@ -723,7 +727,7 @@ export default function Home() {
                           : null,
                       })
                     }
-                    className="border p-2 rounded-lg"
+                    className="border border-border bg-background p-2 rounded-lg"
                   >
                     <option value="PROTECTED">Protected SL (good)</option>
                     <option value="OVERMANAGED">
@@ -754,7 +758,7 @@ export default function Home() {
           </div>
 
           {/* FILTERS */}
-          <div className="bg-white p-4 rounded-2xl shadow flex gap-2 flex-wrap">
+          <div className="bg-card p-4 rounded-2xl shadow flex gap-2 flex-wrap">
             <MultiSelectDropdown
               label="Session"
               options={['Asia', 'London', 'NYAM', 'Out of KZ']}
@@ -831,14 +835,14 @@ export default function Home() {
           />
           <MovedStopsCard stats={analytics.movedStopsStats} />
 
-          <div className="bg-white rounded-2xl shadow p-6">
+          <div className="bg-card rounded-2xl shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Analytics</h2>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
               <div className="p-3 border rounded-lg relative group">
-                <p className="text-gray-500 flex items-center gap-1">
+                <p className="text-muted-foreground flex items-center gap-1">
                   Win Rate
-                  <span className="cursor-pointer text-gray-400 hover:text-black">
+                  <span className="cursor-pointer text-muted-foreground hover:text-black">
                     ℹ️
                   </span>
                 </p>
@@ -879,7 +883,7 @@ export default function Home() {
               </div>
 
               <div className="p-3 border rounded-lg">
-                <p className="text-gray-500">Total PnL</p>
+                <p className="text-muted-foreground">Total PnL</p>
                 <p
                   className={`text-lg font-semibold ${analytics.totalPnL > 0 ? 'text-green-600' : analytics.totalPnL < 0 ? 'text-red-600' : ''}`}
                 >
@@ -888,24 +892,24 @@ export default function Home() {
               </div>
 
               <div className="p-3 border rounded-lg">
-                <p className="text-gray-500">Avg Win</p>
+                <p className="text-muted-foreground">Avg Win</p>
                 <p className="text-lg font-semibold text-green-600">
                   {analytics.avgWin.toFixed(2)}
                 </p>
               </div>
 
               <div className="p-3 border rounded-lg">
-                <p className="text-gray-500">Avg Loss</p>
+                <p className="text-muted-foreground">Avg Loss</p>
                 <p className="text-lg font-semibold text-red-600">
                   {analytics.avgLoss.toFixed(2)}
                 </p>
               </div>
 
               <div className="p-3 border rounded-lg relative group">
-                <p className="text-gray-500 flex items-center gap-1">
+                <p className="text-muted-foreground flex items-center gap-1">
                   Profit Factor
                   {/* INFO ICON */}
-                  <span className="cursor-pointer text-gray-400 hover:text-black">
+                  <span className="cursor-pointer text-muted-foreground hover:text-black">
                     ℹ️
                   </span>
                 </p>
@@ -945,10 +949,10 @@ export default function Home() {
               </div>
 
               <div className="p-3 border rounded-lg relative group">
-                <p className="text-gray-500 flex items-center gap-1">
+                <p className="text-muted-foreground flex items-center gap-1">
                   Expectancy
                   {/* INFO ICON */}
-                  <span className="cursor-pointer text-gray-400 hover:text-black">
+                  <span className="cursor-pointer text-muted-foreground hover:text-black">
                     ℹ️
                   </span>
                 </p>
@@ -993,13 +997,13 @@ export default function Home() {
               </div>
 
               <div className="p-3 border rounded-lg">
-                <p className="text-gray-500">Avg Trades / Day</p>
+                <p className="text-muted-foreground">Avg Trades / Day</p>
                 <p className="text-lg font-semibold">
                   {analytics.avgTradesPerDay.toFixed(2)}
                 </p>
               </div>
 
-              <div className="bg-white p-4 rounded-xl shadow">
+              <div className="bg-card p-4 rounded-xl shadow">
                 <h3 className="font-semibold mb-2">Checklist Mistakes</h3>
                 <table className="w-full text-sm border-collapse mb-4">
                   <tbody>
@@ -1031,7 +1035,7 @@ export default function Home() {
           {/* BREAKDOWN SECTION */}
           {/* ===================== */}
 
-          <div className="bg-white rounded-2xl shadow p-6 space-y-6">
+          <div className="bg-card rounded-2xl shadow p-6 space-y-6">
             <h2 className="text-xl font-semibold">Breakdown</h2>
 
             {/* SESSION */}
@@ -1143,7 +1147,7 @@ export default function Home() {
           {/* CHARTS */}
           {/* ===================== */}
 
-          <div className="bg-white rounded-2xl shadow p-6 space-y-10">
+          <div className="bg-card rounded-2xl shadow p-6 space-y-10">
             <h2 className="text-xl font-semibold">Charts</h2>
 
             {/* EQUITY CURVE */}
@@ -1175,9 +1179,9 @@ export default function Home() {
           </div>
 
           {/* TABLE */}
-          <div className="bg-white p-6 rounded-2xl shadow overflow-x-auto">
+          <div className="bg-card p-6 rounded-2xl shadow overflow-x-auto">
             <table className="w-full text-sm border">
-              <thead className="bg-gray-100 text-left">
+              <thead className="bg-muted text-left">
                 <tr>
                   <th className="border p-2">No.</th>
                   <th className="border p-2">Date</th>
@@ -1230,7 +1234,7 @@ export default function Home() {
                             ? 'text-green-600'
                             : t.result === 'Loss'
                               ? 'text-red-600'
-                              : 'text-gray-500'
+                              : 'text-muted-foreground'
                         }`}
                       >
                         {t.result}
@@ -1241,7 +1245,7 @@ export default function Home() {
                             ? 'text-green-600'
                             : Number(t.amount) < 0
                               ? 'text-red-600'
-                              : 'text-gray-500'
+                              : 'text-muted-foreground'
                         }`}
                       >
                         {t.amount}
@@ -1257,7 +1261,7 @@ export default function Home() {
                             Adjusted
                           </span>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </td>
                       <td className="border p-2">
@@ -1272,9 +1276,9 @@ export default function Home() {
                             Overmanaged
                           </span>
                         ) : t.movedStopsWorked === 'IRRELEVANT' ? (
-                          <span className="text-gray-500">Neutral</span>
+                          <span className="text-muted-foreground">Neutral</span>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </td>
                       <td className="border p-2 text-left text-xs">
@@ -1323,7 +1327,7 @@ export default function Home() {
                     setShowUndo(false);
                     setDeletedTrade(null);
                   }}
-                  className="text-gray-400 hover:underline"
+                  className="text-muted-foreground hover:underline"
                 >
                   Dismiss
                 </button>
