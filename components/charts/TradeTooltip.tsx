@@ -11,10 +11,9 @@ type TradePoint = {
   result?: string;
 };
 
-export function TradeTooltip({
-  active,
-  payload,
-}: TooltipProps<number, string>) {
+export function TradeTooltip(props: any) {
+  const { active, payload } = props;
+
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 

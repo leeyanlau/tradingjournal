@@ -1,11 +1,19 @@
 import { TooltipProps } from 'recharts';
 import { useTheme } from 'next-themes';
 
+type ValueType = number;
+type NameType = string;
+
+type AnalyticsTooltipProps = TooltipProps<ValueType, NameType> & {
+  payload?: any[];
+  label?: string;
+};
+
 export function AnalyticsTooltip({
   active,
   payload,
   label,
-}: TooltipProps<number, string>) {
+}: AnalyticsTooltipProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
 
