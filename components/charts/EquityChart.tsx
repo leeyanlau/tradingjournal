@@ -21,7 +21,7 @@ export function EquityChart({ data }: { data: any[] }) {
         <div className="h-[320px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
-              <Tooltip content={<TradeTooltip />} />
+              <Tooltip content={<TradeTooltip />} isAnimationActive={false} />
               <Line
                 type="monotone"
                 dataKey="balance"

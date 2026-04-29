@@ -34,7 +34,10 @@ export function BaseBarChart({ title, data }: Props) {
             <BarChart data={data}>
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip content={<AnalyticsTooltip />} />
+              <Tooltip
+                content={<AnalyticsTooltip />}
+                isAnimationActive={false}
+              />
               <Bar dataKey="pnl" />
             </BarChart>
           </ResponsiveContainer>
