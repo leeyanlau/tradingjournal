@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: 'AOC Trading Journal',
   description: 'Trading analytics journal by Lee Yan',
   icons: {
-    icon: '/AOC logo.ico',
+    icon: '/aoc-logo.ico',
   },
 };
 
