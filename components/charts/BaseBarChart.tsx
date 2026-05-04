@@ -10,6 +10,8 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnalyticsTooltip } from '@/components/charts/AnalyticsTooltip';
+import { ChartEmptyState } from '@/components/ui/ChartEmptyState';
+import { ChartLoadingState } from '@/components/ui/ChartLoadingState';
 
 import { useTheme } from 'next-themes';
 
@@ -38,14 +40,42 @@ export function BaseBarChart({ title, data }: Props) {
     line: isDark ? '#60a5fa' : '#2563eb',
     bar: isDark ? '#34d399' : '#10b981',
   };
+  const isLoading = false;
+
+  if (isLoading) {
+    return (
+      <Card className="rounded-2xl border border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartLoadingState />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data?.length) {
+    return (
+      <Card className="rounded-2xl border border-border/50 shadow-sm">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartEmptyState title={title} />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-2xl border border-border/50 shadow-sm">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
 
-      <CardContent>
-        <div className="h-[320px] w-full">
+      <CardContent className="min-w-0 h-[360px]">
+        <div className="relative w-full h-[260px] md:h-[320px] lg:h-[360px] min-h-[260px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
@@ -72,6 +102,7 @@ export function BaseBarChart({ title, data }: Props) {
               <Tooltip
                 content={<AnalyticsTooltip />}
                 isAnimationActive={false}
+                wrapperStyle={{ zIndex: 50 }}
               />
               <Bar dataKey="pnl" radius={[6, 6, 0, 0]}>
                 {data.map((entry, index) => (

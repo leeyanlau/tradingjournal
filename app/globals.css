@@ -118,8 +118,20 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  input,
+  textarea,
+  select {
+    @apply text-foreground;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-muted-foreground;
+  }
+  input:-webkit-autofill,
+  textarea:-webkit-autofill {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    transition: background-color 9999s ease-in-out 0s;
   }
   body {
     @apply bg-background text-foreground;

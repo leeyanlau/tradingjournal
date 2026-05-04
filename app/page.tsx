@@ -12,24 +12,13 @@ import { dummyTrades } from '@/data/dummyTrades';
 import { detectMistakes } from '../utils/detectMistakes';
 import { checklistRules } from '@/utils/checklistRules';
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  BarChart,
-  Bar,
-  ResponsiveContainer,
-} from 'recharts';
-
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import KPICards from '@/components/dashboard/KPICards';
 import { MovedStopsCard } from '@/components/dashboard/moved-stops-card';
 import { BaseBarChart } from '@/components/charts/BaseBarChart';
 import { EquityChart } from '@/components/charts/EquityChart';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { inputClass } from '@/components/ui/inputStyles';
 
 // --------------------
 // TYPES
@@ -354,9 +343,36 @@ export default function Home() {
     onToggle: (value: string) => void;
   }) => {
     const [open, setOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+      function handleClickOutside(event: MouseEvent) {
+        if (
+          containerRef.current &&
+          !containerRef.current.contains(event.target as Node)
+        ) {
+          setOpen(false);
+        }
+      }
+
+      document.addEventListener('mousedown', handleClickOutside);
+
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
+    useEffect(() => {
+      function handleKeyDown(e: KeyboardEvent) {
+        if (e.key === 'Escape') setOpen(false);
+      }
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     return (
-      <div className="relative w-48">
+      <div ref={containerRef} className="relative w-48">
         <button
           type="button"
           onClick={() => setOpen(!open)}
@@ -370,7 +386,7 @@ export default function Home() {
             {options.map((opt) => (
               <label
                 key={opt}
-                className="flex items-center gap-2 p-2 hover:bg-gray-100 cursor-pointer"
+                className="flex items-center gap-2 p-2 cursor-pointer text-foreground hover:bg-accent hover:text-accent-foreground"
               >
                 <input
                   type="checkbox"
@@ -410,8 +426,19 @@ export default function Home() {
       }
     };
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowPairDropdown(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // --------------------
@@ -521,7 +548,7 @@ export default function Home() {
                   name="date"
                   value={trade.date}
                   onChange={handleChange}
-                  className="border border-border bg-background p-2 rounded-lg"
+                  className={inputClass}
                   required
                 />
 
@@ -530,7 +557,7 @@ export default function Home() {
                   name="entryTime"
                   value={trade.entryTime}
                   onChange={handleChange}
-                  className="border border-border bg-background p-2 rounded-lg"
+                  className={inputClass}
                   required
                 />
 
@@ -539,7 +566,7 @@ export default function Home() {
                   name="exitTime"
                   value={trade.exitTime}
                   onChange={handleChange}
-                  className="border border-border bg-background p-2 rounded-lg"
+                  className={inputClass}
                   required
                 />
               </div>
@@ -555,7 +582,12 @@ export default function Home() {
                     setShowPairDropdown(true);
                   }}
                   onFocus={() => setShowPairDropdown(true)}
-                  className="border p-2 rounded-lg w-full bg-background"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setShowPairDropdown(false);
+                    }
+                  }}
+                  className="border p-2 rounded-lg w-full bg-background text-foreground"
                 />
 
                 {showPairDropdown && filteredPairs.length > 0 && (
@@ -568,7 +600,7 @@ export default function Home() {
                           setTrade({ ...trade, pair: p });
                           setShowPairDropdown(false);
                         }}
-                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                        className="p-2 cursor-pointer text-foreground rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
                       >
                         {p}
                       </div>
@@ -644,7 +676,7 @@ export default function Home() {
                   value={trade.risk}
                   placeholder="Risk %"
                   onChange={handleChange}
-                  className="border border-border bg-background p-2 rounded-lg"
+                  className={inputClass}
                   required
                 />
 
@@ -653,7 +685,7 @@ export default function Home() {
                   value={trade.amount}
                   placeholder="PnL (auto +/-)"
                   onChange={handleChange}
-                  className="border border-border bg-background p-2 rounded-lg"
+                  className={inputClass}
                   required
                 />
               </div>
@@ -1003,7 +1035,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-card p-4 rounded-xl shadow">
+              <div className="bg-card border p-4 rounded-xl shadow">
                 <h3 className="font-semibold mb-2">Checklist Mistakes</h3>
                 <table className="w-full text-sm border-collapse mb-4">
                   <tbody>
@@ -1154,6 +1186,7 @@ export default function Home() {
             <div className="w-full">
               <EquityChart data={charts.equityCurve} />
             </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
               <BaseBarChart
                 title="Analytics by Day of Week"
