@@ -38,7 +38,7 @@ export function KpiCard({
   };
 
   return (
-    <Card className="rounded-2xl">
+    <Card className="rounded-xl bg-card text-card-foreground shadow-sm p-4">
       <CardHeader className="p-4 pb-0">
         <div className="flex items-center gap-2">
           <CardTitle className="text-base">{label}</CardTitle>
