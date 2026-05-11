@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Trade } from '@/types/trade';
 import { buildTradeAnalytics } from '@/lib/analytics/v2/pipeline';
+import { calculateKPIs } from '@/lib/analytics/calculateKPIs';
 
 export const useTradeAnalyticsV2 = (
   trades: Trade[],
@@ -46,6 +47,7 @@ export const useTradeAnalyticsV2 = (
     });
 
     const analytics = buildTradeAnalytics(filteredTrades);
+    const kpis = calculateKPIs(filteredTrades);
 
     const safeNumber = (v: any) => (typeof v === 'number' && !isNaN(v) ? v : 0);
 
@@ -65,6 +67,9 @@ export const useTradeAnalyticsV2 = (
       winCount: analytics.winCount,
       lossCount: analytics.lossCount,
       breakevenCount: analytics.breakevenCount,
+
+      largestWin: kpis.largestWin,
+      largestLoss: kpis.largestLoss,
 
       movedStopsStats: analytics.movedStopsStats ?? {
         total: 0,

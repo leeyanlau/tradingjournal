@@ -20,6 +20,8 @@ import { EquityChart } from '@/components/charts/EquityChart';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { inputClass } from '@/components/ui/inputStyles';
 
+import { calculateKPIs } from '@/lib/analytics/calculateKPIs';
+
 // --------------------
 // TYPES
 // --------------------
@@ -309,6 +311,10 @@ export default function Home() {
     analytics.typeGroups,
     analytics.pairGroups
   );
+
+  const advancedKPIs = useMemo(() => {
+    return calculateKPIs(analytics.enrichedTrades);
+  }, [analytics.enrichedTrades]);
 
   // --------------------
   // FILTER TOGGLE HANDLER
@@ -866,6 +872,43 @@ export default function Home() {
             }}
           />
           <MovedStopsCard stats={analytics.movedStopsStats} />
+
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="rounded-2xl border p-4">
+              <p className="text-sm text-muted-foreground">Avg Win</p>
+              <h2 className="text-2xl font-bold">
+                ${advancedKPIs.avgWin.toFixed(2)}
+              </h2>
+            </div>
+
+            <div className="rounded-2xl border p-4">
+              <p className="text-sm text-muted-foreground">Avg Loss</p>
+              <h2 className="text-2xl font-bold">
+                -${advancedKPIs.avgLoss.toFixed(2)}
+              </h2>
+            </div>
+
+            <div className="rounded-2xl border p-4">
+              <p className="text-sm text-muted-foreground">Largest Win</p>
+              <h2 className="text-2xl font-bold text-green-500">
+                ${advancedKPIs.largestWin.toFixed(2)}
+              </h2>
+            </div>
+
+            <div className="rounded-2xl border p-4">
+              <p className="text-sm text-muted-foreground">Largest Loss</p>
+              <h2 className="text-2xl font-bold text-red-500">
+                ${advancedKPIs.largestLoss.toFixed(2)}
+              </h2>
+            </div>
+
+            <div className="rounded-2xl border p-4">
+              <p className="text-sm text-muted-foreground">Avg Trades / Day</p>
+              <h2 className="text-2xl font-bold">
+                {advancedKPIs.avgTradesPerDay.toFixed(1)}
+              </h2>
+            </div>
+          </div>
 
           <div className="bg-card rounded-2xl shadow p-6">
             <h2 className="text-xl font-semibold mb-4">Analytics</h2>
