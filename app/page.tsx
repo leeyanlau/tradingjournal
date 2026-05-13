@@ -23,6 +23,9 @@ import { inputClass } from '@/components/ui/inputStyles';
 
 import { calculateKPIs } from '@/lib/analytics/calculateKPIs';
 
+import TradingCalendar from '@/components/dashboard/trading-calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 // --------------------
 // TYPES
 // --------------------
@@ -1234,6 +1237,14 @@ export default function Home() {
               <BaseBarChart title="Session" data={charts.sessionChartData} />
               <BaseBarChart title="Pair" data={charts.pairChartData} />
               <BaseBarChart title="Emotion" data={charts.emotionChartData} />
+            </div>
+          </section>
+
+          <section>
+            <div className="rounded-xl bg-card text-card-foreground shadow-sm">
+              <div className="trade-calendar">
+                <TradingCalendar trades={analytics.enrichedTrades} />
+              </div>
             </div>
           </section>
 
