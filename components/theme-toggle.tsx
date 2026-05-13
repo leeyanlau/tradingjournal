@@ -25,7 +25,7 @@ export function ThemeToggle() {
 
   return (
     <Button
-      className="w-[100px]"
+      className="w-[100px]  fixed bottom-4 left-4 rounded-full px-3 py-2 "
       variant="outline"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
