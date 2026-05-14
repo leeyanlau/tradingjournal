@@ -1,12 +1,18 @@
 import { useMemo } from 'react';
 import { Trade } from '@/types/trade';
 
-type Tally = Record<string, number>;
+type MistakeStat = {
+  count: number;
+  totalPnL: number;
+  avgPnL: number;
+};
+
+type MistakeStats = Record<string, MistakeStat>;
 
 export const useBehavioralAnalytics = (trades: Trade[]) => {
   return useMemo(() => {
-    const checklistTally: Tally = {};
-    const behavioralTally: Tally = {};
+    const checklistMistakeStats: MistakeStats = {};
+    const behavioralMistakeStats: MistakeStats = {};
 
     let movedStopsTotal = 0;
     let movedStopsSuccess = 0;
@@ -39,14 +45,24 @@ export const useBehavioralAnalytics = (trades: Trade[]) => {
       // -------------------------
       const mistakes = t.behavioralMistakes || [];
 
+      const tradePnL = Number(t.amount) || 0;
+
       for (const m of mistakes) {
-        if (m.category === 'checklist') {
-          checklistTally[m.type] = (checklistTally[m.type] || 0) + 1;
+        const target =
+          m.category === 'checklist'
+            ? checklistMistakeStats
+            : behavioralMistakeStats;
+
+        if (!target[m.type]) {
+          target[m.type] = {
+            count: 0,
+            totalPnL: 0,
+            avgPnL: 0,
+          };
         }
 
-        if (m.category === 'behavioral') {
-          behavioralTally[m.type] = (behavioralTally[m.type] || 0) + 1;
-        }
+        target[m.type].count += 1;
+        target[m.type].totalPnL += tradePnL;
       }
     }
 
@@ -54,6 +70,28 @@ export const useBehavioralAnalytics = (trades: Trade[]) => {
 
     const quality =
       evaluatedCount > 0 ? (movedStopsSuccess / evaluatedCount) * 100 : 0;
+
+    for (const stats of [checklistMistakeStats, behavioralMistakeStats]) {
+      Object.values(stats).forEach((m) => {
+        m.avgPnL = m.count > 0 ? m.totalPnL / m.count : 0;
+      });
+    }
+
+    const getBiggestLeak = (stats: MistakeStats) => {
+      const entries = Object.entries(stats);
+
+      if (entries.length === 0) return null;
+
+      const [type, data] = entries.sort(
+        (a, b) => a[1].totalPnL - b[1].totalPnL
+      )[0];
+
+      return {
+        type,
+        ...data,
+        frequency: trades.length > 0 ? (data.count / trades.length) * 100 : 0,
+      };
+    };
 
     return {
       movedStops: {
@@ -66,8 +104,12 @@ export const useBehavioralAnalytics = (trades: Trade[]) => {
         quality,
       },
 
-      checklistTally,
-      behavioralTally,
+      checklistMistakeStats,
+      behavioralMistakeStats,
+      totalTrades: trades.length,
+      biggestChecklistLeak: getBiggestLeak(checklistMistakeStats),
+
+      biggestBehavioralLeak: getBiggestLeak(behavioralMistakeStats),
     };
   }, [trades]);
 };
