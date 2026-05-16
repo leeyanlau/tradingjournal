@@ -46,7 +46,13 @@ export const useTradeAnalyticsV2 = (
       );
     });
 
-    const analytics = buildTradeAnalytics(filteredTrades);
+    const rawAnalytics = buildTradeAnalytics(trades, {
+      includeSuggestions: true,
+    });
+
+    const analytics = buildTradeAnalytics(filteredTrades, {
+      includeSuggestions: false,
+    });
     const kpis = calculateKPIs(filteredTrades);
 
     const safeNumber = (v: any) => (typeof v === 'number' && !isNaN(v) ? v : 0);

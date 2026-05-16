@@ -31,7 +31,9 @@ export function MovedStopsCard({ stats }: Props) {
   return (
     <Card className="rounded-2xl">
       <CardHeader>
-        <CardTitle>Moved Stops Analysis</CardTitle>
+        <CardTitle className="text-xl font-semibold mb-4">
+          Stop Management Behaviour Analysis
+        </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">

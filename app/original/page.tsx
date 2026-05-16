@@ -10,7 +10,7 @@ import { tradeStorage } from '@/lib/storage/tradeStorage';
 import { getSession } from '@/utils/getSession';
 import { calculateChecklist } from '@/utils/checklist';
 import { dummyTrades } from '@/data/dummyTrades';
-import { detectMistakes } from '../utils/detectMistakes';
+import { detectMistakes } from '../../utils/detectMistakes';
 import { checklistRules } from '@/utils/checklistRules';
 
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -316,10 +316,6 @@ export default function Home() {
     analytics.pairGroups
   );
 
-  const advancedKPIs = useMemo(() => {
-    return calculateKPIs(analytics.enrichedTrades);
-  }, [analytics.enrichedTrades]);
-
   // --------------------
   // FILTER TOGGLE HANDLER
   // --------------------
@@ -451,24 +447,6 @@ export default function Home() {
     };
   }, []);
 
-  // --------------------
-  // CHART TOOLTIP COMPONENTS
-  // --------------------
-  const AnalyticsTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null;
-
-    const data = payload[0].payload;
-
-    return (
-      <div className="bg-black text-white p-3 rounded-lg text-xs space-y-1">
-        <p className="font-semibold">{label}</p>
-        <p>PnL: {data.pnl}</p>
-        <p>Win Rate: {data.winRate?.toFixed(1)}%</p>
-        <p>Trades: {data.trades}</p>
-      </div>
-    );
-  };
-
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
 
@@ -503,41 +481,6 @@ export default function Home() {
   }, [analytics.enrichedTrades]);
 
   const behavioral = useBehavioralAnalytics(analytics.enrichedTrades);
-
-  // const tallyMistakes = (trades: Trade[], rules: typeof checklistRules) => {
-  //   // Initialize all checklist mistakes to 0
-  //   const checklistTally: Record<string, number> = {};
-  //   Object.keys(rules).forEach((key) => {
-  //     checklistTally[rules[key as keyof typeof checklistRules].type] = 0;
-  //   });
-
-  //   const behavioralTally: Record<string, number> = {};
-
-  //   trades.forEach((t) => {
-  //     const mistakes = t.behavioralMistakes || [];
-  //     mistakes.forEach((m) => {
-  //       if (m.category === 'checklist') {
-  //         checklistTally[m.type] = (checklistTally[m.type] || 0) + 1;
-  //       } else if (m.category === 'behavioral') {
-  //         behavioralTally[m.type] = (behavioralTally[m.type] || 0) + 1;
-  //       }
-  //     });
-  //   });
-
-  //   // Sort each tally by frequency (descending)
-  //   const sortTally = (tally: Record<string, number>) =>
-  //     Object.fromEntries(Object.entries(tally).sort(([, a], [, b]) => b - a));
-
-  //   return {
-  //     checklistTally: sortTally(checklistTally),
-  //     behavioralTally: sortTally(behavioralTally),
-  //   };
-  // };
-
-  // const { checklistTally, behavioralTally } = tallyMistakes(
-  //   analytics.enrichedTrades,
-  //   checklistRules
-  // );
 
   return (
     <DashboardLayout>
