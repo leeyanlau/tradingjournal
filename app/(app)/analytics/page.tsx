@@ -5,75 +5,29 @@ import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 import { useBehavioralAnalytics } from '@/hooks/useBehavioralAnalytics';
 import { useTradeCharts } from '@/hooks/useTradeCharts';
 
-import { tradeStorage } from '@/lib/storage/tradeStorage';
-import { detectMistakes } from '@/utils/detectMistakes';
+import { useTradesStore } from '@/hooks/useTradesStore';
+import { useTradeFilters } from '@/hooks/useTradeFilters';
 
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import DashboardCardLayout from '@/components/dashboard/DashboardCardLayout';
 import { MultiSelectDropdown } from '@/components/ui/multi-select-dropdown';
+import { TradeFilterBar } from '@/components/dashboard/TradeFilterBar';
 import { BaseBarChart } from '@/components/charts/BaseBarChart';
 import { EquityChart } from '@/components/charts/EquityChart';
 
 export default function AnalyticsPage() {
-  // FILTERS
-  const [filters, setFilters] = useState({
-    session: [] as string[],
-    result: [] as string[],
-    pair: [] as string[],
-    feeling: [] as string[],
-    startDate: '',
-    endDate: '',
-  });
+  // 1. LOAD GLOBAL TRADES
+  const { trades, loadTrades } = useTradesStore();
 
-  const rawTrades = useMemo(() => {
-    return tradeStorage.get().map((t) => ({
-      ...t,
-      behavioralMistakes: detectMistakes(t),
-    }));
+  useEffect(() => {
+    loadTrades();
   }, []);
 
-  const filteredTrades = useMemo(() => {
-    return rawTrades.filter((t) => {
-      // session
-      if (filters.session.length && !filters.session.includes(t.session)) {
-        return false;
-      }
+  // 2. FILTERS
+  const { filters, setFilters, filteredTrades, toggleFilter, resetFilters } =
+    useTradeFilters(trades);
 
-      // result
-      if (filters.result.length && !filters.result.includes(t.result)) {
-        return false;
-      }
-
-      // pair
-      if (filters.pair.length && !filters.pair.includes(t.pair)) {
-        return false;
-      }
-
-      // feeling
-      if (filters.feeling.length && !filters.feeling.includes(t.feeling)) {
-        return false;
-      }
-
-      // date
-      if (filters.startDate) {
-        if (new Date(t.date) < new Date(filters.startDate)) return false;
-      }
-
-      if (filters.endDate) {
-        if (new Date(t.date) > new Date(filters.endDate)) return false;
-      }
-
-      return true;
-    });
-  }, [rawTrades, filters]);
-
-  const analytics = useTradeAnalyticsV2(filteredTrades, {
-    session: [],
-    result: [],
-    pair: [],
-    feeling: [],
-    startDate: '',
-    endDate: '',
-  });
+  // 3. ANALYTICS
+  const analytics = useTradeAnalyticsV2(filteredTrades);
 
   const behavioral = useBehavioralAnalytics(analytics.enrichedTrades);
 
@@ -86,104 +40,21 @@ export default function AnalyticsPage() {
     analytics.pairGroups
   );
 
-  // --------------------
-  // FILTER TOGGLE HANDLER
-  // --------------------
-  const toggleFilter = (
-    key: 'session' | 'result' | 'pair' | 'feeling',
-    value: string
-  ) => {
-    setFilters((prev) => {
-      const exists = prev[key].includes(value);
-      return {
-        ...prev,
-        [key]: exists
-          ? prev[key].filter((v) => v !== value)
-          : [...prev[key], value],
-      };
-    });
-  };
+  console.log(analytics);
 
   return (
-    <DashboardLayout>
+    <DashboardCardLayout>
       <div className="max-w-7xl mx-auto space-y-10 p-6">
         {/* TITLE */}
         <h1 className="text-3xl font-bold">Analytics</h1>
 
-        {/* FILTER BAR (top row) */}
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3">
-            <MultiSelectDropdown
-              label="Session"
-              options={['Asia', 'London', 'NYAM', 'Out of KZ']}
-              selected={filters.session}
-              onToggle={(v) => toggleFilter('session', v)}
-            />
-
-            <MultiSelectDropdown
-              label="Result"
-              options={['Win', 'Loss', 'Breakeven']}
-              selected={filters.result}
-              onToggle={(v) => toggleFilter('result', v)}
-            />
-
-            <MultiSelectDropdown
-              label="Pairs"
-              options={analytics.pairSuggestions}
-              selected={filters.pair}
-              onToggle={(v) => toggleFilter('pair', v)}
-            />
-
-            <MultiSelectDropdown
-              label="Feeling"
-              options={['Calm', 'Anxious']}
-              selected={filters.feeling}
-              onToggle={(v) => toggleFilter('feeling', v)}
-            />
-
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    startDate: e.target.value,
-                  }))
-                }
-                className="border border-border p-2 rounded"
-              />
-
-              <input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    endDate: e.target.value,
-                  }))
-                }
-                className="border border-border p-2 rounded"
-              />
-            </div>
-
-            <button
-              onClick={() =>
-                setFilters({
-                  session: [],
-                  result: [],
-                  pair: [],
-                  feeling: [],
-                  startDate: '',
-                  endDate: '',
-                })
-              }
-              className="ml-auto bg-primary text-primary-foreground px-3 py-2 rounded-md hover:opacity-90 active:scale-[0.98] transition"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
+        <TradeFilterBar
+          filters={filters}
+          setFilters={setFilters}
+          toggleFilter={toggleFilter}
+          resetFilters={resetFilters}
+          pairOptions={analytics.pairSuggestions}
+        />
 
         {/* ===================== */}
         {/* MISTAKES SECTION */}
@@ -481,6 +352,6 @@ export default function AnalyticsPage() {
           </div>
         </section>
       </div>
-    </DashboardLayout>
+    </DashboardCardLayout>
   );
 }

@@ -3,57 +3,14 @@ import { Trade } from '@/types/trade';
 import { buildTradeAnalytics } from '@/lib/analytics/v2/pipeline';
 import { calculateKPIs } from '@/lib/analytics/calculateKPIs';
 
-export const useTradeAnalyticsV2 = (
-  trades: Trade[],
-  filters: {
-    session: string[];
-    result: string[];
-    pair: string[];
-    feeling: string[];
-    startDate: string;
-    endDate: string;
-  }
-) => {
+export const useTradeAnalyticsV2 = (trades: Trade[]) => {
   return useMemo(() => {
-    const filteredTrades = trades.filter((t) => {
-      const sessionMatch =
-        filters.session.length === 0 || filters.session.includes(t.session);
+    // -----------------------------
+    // CORE ANALYTICS (NO FILTERING HERE)
+    // -----------------------------
+    const analytics = buildTradeAnalytics(trades);
 
-      const resultMatch =
-        filters.result.length === 0 || filters.result.includes(t.result);
-
-      const pairMatch =
-        filters.pair.length === 0 || filters.pair.includes(t.pair);
-
-      const feelingMatch =
-        filters.feeling.length === 0 || filters.feeling.includes(t.feeling);
-
-      const startMatch = filters.startDate
-        ? new Date(t.date) >= new Date(filters.startDate)
-        : true;
-
-      const endMatch = filters.endDate
-        ? new Date(t.date) <= new Date(filters.endDate)
-        : true;
-
-      return (
-        sessionMatch &&
-        resultMatch &&
-        pairMatch &&
-        feelingMatch &&
-        startMatch &&
-        endMatch
-      );
-    });
-
-    const rawAnalytics = buildTradeAnalytics(trades, {
-      includeSuggestions: true,
-    });
-
-    const analytics = buildTradeAnalytics(filteredTrades, {
-      includeSuggestions: false,
-    });
-    const kpis = calculateKPIs(filteredTrades);
+    const kpis = calculateKPIs(trades);
 
     const safeNumber = (v: any) => (typeof v === 'number' && !isNaN(v) ? v : 0);
 
@@ -62,6 +19,9 @@ export const useTradeAnalyticsV2 = (
 
       enrichedTrades: analytics.enrichedTrades ?? [],
 
+      // -----------------------------
+      // CORE METRICS
+      // -----------------------------
       winRate: safeNumber(analytics.winRate),
       totalPnL: safeNumber(analytics.totalPnL),
       avgWin: safeNumber(analytics.avgWin),
@@ -74,9 +34,15 @@ export const useTradeAnalyticsV2 = (
       lossCount: analytics.lossCount,
       breakevenCount: analytics.breakevenCount,
 
+      // -----------------------------
+      // KPI EXTENSIONS
+      // -----------------------------
       largestWin: kpis.largestWin,
       largestLoss: kpis.largestLoss,
 
+      // -----------------------------
+      // MOVED STOPS
+      // -----------------------------
       movedStopsStats: analytics.movedStopsStats ?? {
         total: 0,
         success: 0,
@@ -91,11 +57,25 @@ export const useTradeAnalyticsV2 = (
         pnlImpact: 0,
       },
 
+      // -----------------------------
+      // BEHAVIOR / MISTAKES
+      // -----------------------------
       mistakeSummary: analytics.mistakeSummary ?? {},
       mistakeCost: analytics.mistakeCost ?? 0,
 
+      // -----------------------------
+      // CHART DATA
+      // -----------------------------
       equityData: analytics.equityData ?? [],
+      weekdayChartData: analytics.weekdayChartData ?? [],
+      typeChartData: analytics.typeChartData ?? [],
+      sessionChartData: analytics.sessionChartData ?? [],
+      pairChartData: analytics.pairChartData ?? [],
+      emotionChartData: analytics.emotionChartData ?? [],
 
+      // -----------------------------
+      // GROUPS
+      // -----------------------------
       sessionGroups: analytics.sessionGroups ?? [],
       typeGroups: analytics.typeGroups ?? [],
       emotionGroups: analytics.emotionGroups ?? [],
@@ -103,13 +83,10 @@ export const useTradeAnalyticsV2 = (
       pairGroups: analytics.pairGroups ?? [],
       weekdayGroups: analytics.weekdayGroups ?? [],
 
-      weekdayChartData: analytics.weekdayChartData ?? [],
-      typeChartData: analytics.typeChartData ?? [],
-      sessionChartData: analytics.sessionChartData ?? [],
-      pairChartData: analytics.pairChartData ?? [],
-      emotionChartData: analytics.emotionChartData ?? [],
-
+      // -----------------------------
+      // UI SUGGESTIONS
+      // -----------------------------
       pairSuggestions: analytics.pairSuggestions ?? [],
     };
-  }, [trades, filters]);
+  }, [trades]);
 };

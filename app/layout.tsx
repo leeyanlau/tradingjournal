@@ -1,27 +1,5 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from 'next-themes';
-import { Providers } from './providers';
-import { AppShell } from '@/components/app-shell';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
-
-export const metadata: Metadata = {
-  title: 'AOC Trading Journal',
-  description: 'Trading analytics journal by Lee Yan',
-  icons: {
-    icon: '/aoc-logo.ico',
-  },
-};
+import { Providers } from '@/providers/Providers';
 
 export default function RootLayout({
   children,
@@ -29,15 +7,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable}`}
-    >
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <Providers>
-          <AppShell>{children}</AppShell>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

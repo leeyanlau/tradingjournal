@@ -10,10 +10,10 @@ import { tradeStorage } from '@/lib/storage/tradeStorage';
 import { getSession } from '@/utils/getSession';
 import { calculateChecklist } from '@/utils/checklist';
 import { dummyTrades } from '@/data/dummyTrades';
-import { detectMistakes } from '../../utils/detectMistakes';
+import { detectMistakes } from '../../../utils/detectMistakes';
 import { checklistRules } from '@/utils/checklistRules';
 
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import DashboardCardLayout from '@/components/dashboard/DashboardCardLayout';
 import KPICards from '@/components/dashboard/KPICards';
 import { MovedStopsCard } from '@/components/dashboard/moved-stops-card';
 import { BaseBarChart } from '@/components/charts/BaseBarChart';
@@ -305,7 +305,7 @@ export default function Home() {
   // --------------------
   // ANALYTICS HOOK
   // --------------------
-  const analytics = useTradeAnalyticsV2(trades, filters);
+  const analytics = useTradeAnalyticsV2(trades);
 
   const charts = useTradeCharts(
     analytics.enrichedTrades,
@@ -483,7 +483,7 @@ export default function Home() {
   const behavioral = useBehavioralAnalytics(analytics.enrichedTrades);
 
   return (
-    <DashboardLayout>
+    <DashboardCardLayout>
       <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-10">
           <h1 className="text-3xl font-bold text-center">Trading Journal</h1>
@@ -1522,6 +1522,6 @@ export default function Home() {
           </section>
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardCardLayout>
   );
 }

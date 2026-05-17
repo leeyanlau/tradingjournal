@@ -5,15 +5,14 @@ import { Trade } from '@/types/trade';
 import { MovedStopResult } from '@/types/trade';
 import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 
-import { tradeStorage } from '@/lib/storage/tradeStorage';
-import { dummyTrades } from '@/data/dummyTrades';
+import { useTradesStore } from '@/hooks/useTradesStore';
+
+import DashboardCardLayout from '@/components/dashboard/DashboardCardLayout';
+import { inputClass } from '@/components/ui/inputStyles';
+
 import { detectMistakes } from '@/utils/detectMistakes';
 import { getSession } from '@/utils/getSession';
 import { calculateChecklist } from '@/utils/checklist';
-
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { inputClass } from '@/components/ui/inputStyles';
-import { ThemeToggle } from '@/components/theme-toggle';
 
 type Checklist = Trade['checklist'];
 
@@ -53,11 +52,12 @@ const createDefaultTrade = (): Trade => ({
 
 export default function TradesPage() {
   // --------------------
-  // STATE
+  // STORE
   // --------------------
-  const [trade, setTrade] = useState<Trade>(createDefaultTrade());
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const { trades, loadTrades } = useTradesStore();
+
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [trade, setTrade] = useState<Trade>(createDefaultTrade());
 
   const [deletedTrade, setDeletedTrade] = useState<Trade | null>(null);
   const [showUndo, setShowUndo] = useState(false);
@@ -65,41 +65,31 @@ export default function TradesPage() {
   const [pairQuery, setPairQuery] = useState('');
   const [showPairDropdown, setShowPairDropdown] = useState(false);
 
-  const pairInputRef = useRef<HTMLDivElement>(null);
   const didLoad = useRef(false);
 
-  // --------------------
-  // LOAD TRADES
-  // --------------------
   useEffect(() => {
-    const saved = tradeStorage.get();
-
-    if (saved.length === 0) {
-      const seeded = dummyTrades.map((t) => ({
-        ...t,
-        behavioralMistakes: detectMistakes(t),
-      }));
-      setTrades(seeded);
-      didLoad.current = true;
-      return;
-    }
-
-    const parsed = saved.map((t: Trade) => ({
-      ...t,
-      behavioralMistakes: detectMistakes(t),
-    }));
-
-    setTrades(parsed);
-    didLoad.current = true;
-  }, []);
+    loadTrades();
+  }, [loadTrades]);
 
   // --------------------
-  // SAVE TRADES
+  // HELPERS
   // --------------------
-  useEffect(() => {
-    if (!didLoad.current) return;
-    tradeStorage.set(trades);
-  }, [trades]);
+  const updateTradeInStore = (updated: Trade) => {
+    const updatedTrades = trades.map((t) =>
+      t.id === updated.id ? updated : t
+    );
+    useTradesStore.setState({ trades: updatedTrades });
+  };
+
+  const addTradeToStore = (newTrade: Trade) => {
+    useTradesStore.setState({ trades: [...trades, newTrade] });
+  };
+
+  const deleteTradeFromStore = (id: string) => {
+    useTradesStore.setState({
+      trades: trades.filter((t) => t.id !== id),
+    });
+  };
 
   // --------------------
   // HANDLERS
@@ -138,10 +128,8 @@ export default function TradesPage() {
     e.preventDefault();
 
     const rawAmount = Number(trade.amount);
-    const riskValue = Number(trade.risk);
 
     if (isNaN(rawAmount)) return alert('Invalid PnL');
-    if (isNaN(riskValue)) return alert('Invalid risk');
 
     let normalizedAmount = rawAmount;
     if (trade.result === 'Loss') normalizedAmount = -Math.abs(rawAmount);
@@ -157,11 +145,11 @@ export default function TradesPage() {
       }),
     };
 
-    setTrades((prev) =>
-      editingId
-        ? prev.map((t) => (t.id === editingId ? finalTrade : t))
-        : [...prev, finalTrade]
-    );
+    if (editingId) {
+      updateTradeInStore(finalTrade);
+    } else {
+      addTradeToStore(finalTrade);
+    }
 
     setTrade(createDefaultTrade());
     setEditingId(null);
@@ -179,7 +167,7 @@ export default function TradesPage() {
     if (!t) return;
 
     setDeletedTrade(t);
-    setTrades((prev) => prev.filter((x) => x.id !== id));
+    deleteTradeFromStore(id);
     setShowUndo(true);
 
     setTimeout(() => {
@@ -190,13 +178,13 @@ export default function TradesPage() {
 
   const handleUndo = () => {
     if (!deletedTrade) return;
-    setTrades((prev) => [...prev, deletedTrade]);
+    addTradeToStore(deletedTrade);
     setDeletedTrade(null);
     setShowUndo(false);
   };
 
   // --------------------
-  // Pairs
+  // PAIRS
   // --------------------
   const allPairs = useMemo(() => {
     return Array.from(new Set(trades.map((t) => t.pair).filter(Boolean)));
@@ -210,22 +198,16 @@ export default function TradesPage() {
       : allPairs;
   }, [allPairs, pairQuery]);
 
-  const [filters] = useState({
-    session: [] as string[],
-    result: [] as string[],
-    pair: [] as string[],
-    feeling: [] as string[],
-    startDate: '',
-    endDate: '',
-  });
-
-  const analytics = useTradeAnalyticsV2(trades, filters);
+  // --------------------
+  // ANALYTICS
+  // --------------------
+  const analytics = useTradeAnalyticsV2(trades);
 
   // --------------------
   // UI
   // --------------------
   return (
-    <DashboardLayout>
+    <DashboardCardLayout>
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-8">
         <h1 className="text-3xl font-bold">Trades</h1>
 
@@ -266,7 +248,7 @@ export default function TradesPage() {
               />
             </div>
 
-            <div className="relative" ref={pairInputRef}>
+            <div className="relative">
               <input
                 name="pair"
                 value={pairQuery}
@@ -706,6 +688,6 @@ export default function TradesPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </DashboardCardLayout>
   );
 }
