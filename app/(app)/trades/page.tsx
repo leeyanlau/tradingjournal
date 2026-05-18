@@ -71,6 +71,41 @@ export default function TradesPage() {
     loadTrades();
   }, [loadTrades]);
 
+  const pairDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // mouse click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        pairDropdownRef.current &&
+        !pairDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowPairDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // press esc
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowPairDropdown(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  const formRef = useRef<HTMLDivElement | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [highlightForm, setHighlightForm] = useState(false);
+
   // --------------------
   // HELPERS
   // --------------------
@@ -154,12 +189,25 @@ export default function TradesPage() {
     setTrade(createDefaultTrade());
     setEditingId(null);
     setPairQuery('');
+    setIsEditMode(false);
   };
 
   const handleEdit = (t: Trade) => {
     setTrade(t);
     setEditingId(t.id);
     setPairQuery(t.pair);
+
+    setIsEditMode(true);
+    setHighlightForm(true);
+
+    formRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+
+    setTimeout(() => {
+      setHighlightForm(false);
+    }, 2000);
   };
 
   const handleDelete = (id: string) => {
@@ -212,9 +260,39 @@ export default function TradesPage() {
         <h1 className="text-3xl font-bold">Trades</h1>
 
         {/* ================= FORM ================= */}
-        <div className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm">
+        <div
+          ref={formRef}
+          className={`rounded-2xl border bg-card text-card-foreground shadow-sm transition-all duration-500 ${
+            highlightForm
+              ? 'border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.25)]'
+              : 'border-border'
+          }`}
+        >
           <div className=" px-6 py-4">
             <h2 className="text-lg font-semibold">Add Trade</h2>
+          </div>
+
+          <div className="px-6 pb-2">
+            {isEditMode && (
+              <div className="flex items-center justify-between rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-sm">
+                <span className="text-yellow-600 font-medium">
+                  ✏️ Edit Mode Active
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setEditingId(null);
+                    setTrade(createDefaultTrade());
+                    setPairQuery('');
+                  }}
+                  className="text-xs text-yellow-700 hover:underline"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -248,7 +326,10 @@ export default function TradesPage() {
               />
             </div>
 
-            <div className="relative">
+            <div
+              ref={pairDropdownRef}
+              className="relative border border-border rounded-lg"
+            >
               <input
                 name="pair"
                 value={pairQuery}
@@ -259,11 +340,6 @@ export default function TradesPage() {
                   setShowPairDropdown(true);
                 }}
                 onFocus={() => setShowPairDropdown(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    setShowPairDropdown(false);
-                  }
-                }}
                 className="p-2 rounded-lg w-full bg-background text-foreground"
               />
 
@@ -456,7 +532,7 @@ export default function TradesPage() {
               type="submit"
               className="w-full bg-primary text-primary-foreground py-2 rounded-xl hover:opacity-90 active:scale-[0.99] transition font-medium shadow-sm"
             >
-              Add Trade
+              {isEditMode ? 'Update Trade' : 'Add Trade'}
             </button>
           </form>
         </div>
