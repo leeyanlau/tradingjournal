@@ -1,10 +1,12 @@
 'use client';
 
+import { ThemeProvider } from 'next-themes';
+
 import { TradeModalProvider } from '@/components/global/TradeModalProvider';
 import { FloatingTradeButton } from '@/components/global/FloatingTradeButton';
 import { TradeModalContainer } from '@/components/global/TradeModalContainer';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useTradesStore } from '@/hooks/useTradesStore';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -28,27 +30,29 @@ export function Providers({ children }: { children: React.ReactNode }) {
       : allPairs;
   }, [allPairs, pairQuery]);
 
-  const pairDropdownRef = useState<any>(null)[0];
+  const pairDropdownRef = useRef<HTMLDivElement | null>(null);
 
   const inputClass = 'border border-border bg-background p-2 rounded-lg w-full';
 
   return (
-    <TradeModalProvider>
-      {children}
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TradeModalProvider>
+        {children}
 
-      {/* GLOBAL FLOATING BUTTON */}
-      <FloatingTradeButton />
+        {/* GLOBAL FLOATING BUTTON */}
+        <FloatingTradeButton />
 
-      {/* GLOBAL MODAL */}
-      <TradeModalContainer
-        inputClass={inputClass}
-        pairQuery={pairQuery}
-        setPairQuery={setPairQuery}
-        showPairDropdown={showPairDropdown}
-        setShowPairDropdown={setShowPairDropdown}
-        filteredPairs={filteredPairs}
-        pairDropdownRef={pairDropdownRef}
-      />
-    </TradeModalProvider>
+        {/* GLOBAL MODAL */}
+        <TradeModalContainer
+          inputClass={inputClass}
+          pairQuery={pairQuery}
+          setPairQuery={setPairQuery}
+          showPairDropdown={showPairDropdown}
+          setShowPairDropdown={setShowPairDropdown}
+          filteredPairs={filteredPairs}
+          pairDropdownRef={pairDropdownRef}
+        />
+      </TradeModalProvider>
+    </ThemeProvider>
   );
 }
