@@ -14,6 +14,9 @@ import { detectMistakes } from '@/utils/detectMistakes';
 import { getSession } from '@/utils/getSession';
 import { calculateChecklist } from '@/utils/checklist';
 
+import { TradeForm } from '@/components/trades/TradeForm';
+import { TradeModal } from '@/components/trades/TradeModal';
+
 type Checklist = Trade['checklist'];
 
 const emptyChecklist: Checklist = {
@@ -64,6 +67,8 @@ export default function TradesPage() {
 
   const [pairQuery, setPairQuery] = useState('');
   const [showPairDropdown, setShowPairDropdown] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const didLoad = useRef(false);
 
@@ -198,6 +203,7 @@ export default function TradesPage() {
     setPairQuery(t.pair);
 
     setIsEditMode(true);
+    setIsModalOpen(true);
     setHighlightForm(true);
 
     formRef.current?.scrollIntoView({
@@ -231,6 +237,12 @@ export default function TradesPage() {
     setShowUndo(false);
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setIsEditMode(false);
+    setEditingId(null);
+  };
+
   // --------------------
   // PAIRS
   // --------------------
@@ -256,286 +268,55 @@ export default function TradesPage() {
   // --------------------
   return (
     <DashboardCardLayout>
+      {/* FLOATING ADD BUTTON */}
+      <button
+        onClick={() => {
+          setIsModalOpen(true);
+          setTrade(createDefaultTrade());
+          setEditingId(null);
+          setIsEditMode(false);
+        }}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground text-2xl shadow-lg hover:scale-105 active:scale-95 transition flex items-center justify-center"
+      >
+        +
+      </button>
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-8">
         <h1 className="text-3xl font-bold">Trades</h1>
 
         {/* ================= FORM ================= */}
-        <div
-          ref={formRef}
-          className={`rounded-2xl border bg-card text-card-foreground shadow-sm transition-all duration-500 ${
-            highlightForm
-              ? 'border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.25)]'
-              : 'border-border'
-          }`}
-        >
-          <div className=" px-6 py-4">
-            <h2 className="text-lg font-semibold">Add Trade</h2>
-          </div>
+        <TradeModal open={isModalOpen} onClose={closeModal}>
+          {/* Header (optional but recommended since your modal is "blank") */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">
+              {isEditMode ? 'Edit Trade' : 'Add Trade'}
+            </h2>
 
-          <div className="px-6 pb-2">
-            {isEditMode && (
-              <div className="flex items-center justify-between rounded-lg border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-sm">
-                <span className="text-yellow-600 font-medium">
-                  ✏️ Edit Mode Active
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditMode(false);
-                    setEditingId(null);
-                    setTrade(createDefaultTrade());
-                    setPairQuery('');
-                  }}
-                  className="text-xs text-yellow-700 hover:underline"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {/* DATE + TIME */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 min-w-0">
-              <input
-                type="date"
-                name="date"
-                value={trade.date}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-
-              <input
-                type="time"
-                name="entryTime"
-                value={trade.entryTime}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-
-              <input
-                type="time"
-                name="exitTime"
-                value={trade.exitTime}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-            </div>
-
-            <div
-              ref={pairDropdownRef}
-              className="relative border border-border rounded-lg"
-            >
-              <input
-                name="pair"
-                value={pairQuery}
-                placeholder="Pair (e.g. NQ, EURUSD)"
-                onChange={(e) => {
-                  setPairQuery(e.target.value);
-                  setTrade({ ...trade, pair: e.target.value });
-                  setShowPairDropdown(true);
-                }}
-                onFocus={() => setShowPairDropdown(true)}
-                className="p-2 rounded-lg w-full bg-background text-foreground"
-              />
-
-              {showPairDropdown && filteredPairs.length > 0 && (
-                <div className="absolute z-10 bg-background border w-full mt-1 rounded shadow max-h-40 overflow-auto">
-                  {filteredPairs.map((p) => (
-                    <div
-                      key={p}
-                      onClick={() => {
-                        setPairQuery(p);
-                        setTrade({ ...trade, pair: p });
-                        setShowPairDropdown(false);
-                      }}
-                      className="p-2 cursor-pointer text-foreground rounded-md transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* SESSION DISPLAY */}
-            <div className="p-2 rounded-lg bg-background flex flex-col justify-center">
-              <label className="text-xs text-muted-foreground mb-1">
-                Session (auto-detected)
-              </label>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">
-                  {trade.session || '-'}
-                </span>
-
-                <span className="text-xs text-muted-foreground">🔒</span>
-              </div>
-            </div>
-
-            {/* TRADE STRUCTURE */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <select
-                name="direction"
-                value={trade.direction}
-                onChange={handleChange}
-                className="border border-border bg-background p-2 rounded-lg"
-              >
-                <option>Buy</option>
-                <option>Sell</option>
-              </select>
-
-              <select
-                name="type"
-                value={trade.type}
-                onChange={handleChange}
-                className="border border-border bg-background p-2 rounded-lg"
-              >
-                <option>Scalp</option>
-                <option>Day Trade</option>
-                <option>Swing</option>
-              </select>
-
-              <select
-                name="result"
-                value={trade.result}
-                onChange={handleChange}
-                className="border border-border bg-background p-2 rounded-lg"
-              >
-                <option>Win</option>
-                <option>Loss</option>
-                <option>Breakeven</option>
-              </select>
-
-              <select
-                name="feeling"
-                value={trade.feeling}
-                onChange={handleChange}
-                className="border border-border bg-background p-2 rounded-lg"
-              >
-                <option>Calm</option>
-                <option>Anxious</option>
-              </select>
-            </div>
-
-            {/* RISK */}
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                name="risk"
-                value={trade.risk}
-                placeholder="Risk %"
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-
-              <input
-                name="amount"
-                value={trade.amount}
-                placeholder="PnL (auto +/-)"
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-            </div>
-
-            {/* CHECKLIST */}
-            <div>
-              <h3 className="font-semibold mb-2">AOC Checklist</h3>
-
-              <div className="flex flex-col gap-2">
-                {Object.entries({
-                  bias: 'Daily bias clear',
-                  timeframeAlignment: 'Timeframe Alignment',
-                  sessionProfile: 'Session Profiles',
-                  pdArray: 'H1 PD Arrays',
-                  cisd: 'M5 CISD',
-                  strongHL: 'Strong High/Low',
-                  news: 'News',
-                  killzone: 'Killzone',
-                  smt: 'SMT',
-                }).map(([key, label]) => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={trade.checklist[key as keyof Checklist]}
-                      onChange={() => handleChecklist(key as keyof Checklist)}
-                    />
-                    {label}
-                  </label>
-                ))}
-              </div>
-
-              <div className="mt-2 text-sm">
-                Score: {trade.checklistScore}/9 | Suggested Risk:{' '}
-                <span className="font-semibold text-blue-600">
-                  {trade.suggestedRisk}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  name="movedStops"
-                  checked={trade.movedStops}
-                  onChange={(e) =>
-                    setTrade({
-                      ...trade,
-                      movedStops: e.target.checked,
-                      movedStopsWorked: e.target.checked
-                        ? trade.movedStopsWorked
-                        : null,
-                    })
-                  }
-                />
-                Moved stops?
-              </label>
-
-              {trade.movedStops && (
-                <select
-                  name="movedStopsWorked"
-                  value={trade.movedStopsWorked ?? ''}
-                  onChange={(e) =>
-                    setTrade({
-                      ...trade,
-                      movedStopsWorked: e.target.value
-                        ? (e.target.value as MovedStopResult)
-                        : null,
-                    })
-                  }
-                  className="border border-border bg-background p-2 rounded-lg"
-                >
-                  <option value="PROTECTED">Protected SL (good)</option>
-                  <option value="OVERMANAGED">Interfered with TP (bad)</option>
-                  <option value="IRRELEVANT">No impact (neutral)</option>
-                </select>
-              )}
-            </div>
-
-            {/* REMARKS */}
-            <textarea
-              name="remarks"
-              value={trade.remarks}
-              placeholder="Trade notes / execution thoughts..."
-              onChange={handleChange}
-              className="border p-2 rounded-lg w-full"
-            />
-
-            {/* SUBMIT */}
             <button
-              type="submit"
-              className="w-full bg-primary text-primary-foreground py-2 rounded-xl hover:opacity-90 active:scale-[0.99] transition font-medium shadow-sm"
+              onClick={() => setIsModalOpen(false)}
+              className="text-muted-foreground hover:text-foreground"
             >
-              {isEditMode ? 'Update Trade' : 'Add Trade'}
+              ✕
             </button>
-          </form>
-        </div>
+          </div>
+
+          <TradeForm
+            trade={trade}
+            setTrade={setTrade}
+            onSubmit={(e: any) => {
+              handleSubmit(e);
+              setIsModalOpen(false); // close after submit
+            }}
+            isEditMode={isEditMode}
+            inputClass={inputClass}
+            pairQuery={pairQuery}
+            setPairQuery={setPairQuery}
+            showPairDropdown={showPairDropdown}
+            setShowPairDropdown={setShowPairDropdown}
+            filteredPairs={filteredPairs}
+            pairDropdownRef={pairDropdownRef}
+            onToggleChecklist={handleChecklist}
+          />
+        </TradeModal>
 
         {/* ================= TABLE ================= */}
         <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
