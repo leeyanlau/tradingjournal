@@ -1,5 +1,7 @@
 import React from 'react';
+import { useEffect } from 'react';
 import { MovedStopResult, Trade } from '@/types/trade';
+import { getSession } from '@/utils/getSession';
 
 type ChecklistKey =
   | 'bias'
@@ -56,12 +58,57 @@ export function TradeForm({
   ) => {
     const { name, value, type } = e.target;
 
-    setTrade({
-      ...trade,
-      [name]:
-        type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    setTrade((prev) => {
+      const updated: Trade = {
+        ...prev,
+        [name]:
+          type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      };
+
+      // 🔥 AUTO SESSION LOGIC
+      if (name === 'entryTime') {
+        updated.session = getSession(value);
+      }
+
+      return updated;
     });
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      const el = pairDropdownRef?.current;
+
+      if (!el) return;
+
+      // 🔥 IMPORTANT: use composedPath (fixes modal + portal issues)
+      const path = event.composedPath?.();
+
+      if (path && path.includes(el)) {
+        return; // click INSIDE dropdown → do nothing
+      }
+
+      // fallback for older browsers
+      if (el.contains(target)) return;
+
+      setShowPairDropdown(false);
+    };
+
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowPairDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEsc);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [setShowPairDropdown]);
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -131,11 +178,17 @@ export function TradeForm({
         )}
       </div>
 
-      {/* SESSION */}
-      <div className="p-2 rounded-lg bg-background">
-        <label className="text-xs text-muted-foreground">Session</label>
-        <div className="flex justify-between">
-          <span>{trade.session || '-'}</span>
+      {/* SESSION DISPLAY */}
+      <div className="border border-border p-2 rounded-lg bg-background flex flex-col justify-center">
+        <label className="text-xs text-muted-foreground mb-1">
+          Session (auto-detected)
+        </label>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground">
+            {trade.session || '-'}
+          </span>
+
           <span className="text-xs text-muted-foreground">🔒</span>
         </div>
       </div>
@@ -233,6 +286,13 @@ export function TradeForm({
             </label>
           ))}
         </div>
+      </div>
+
+      <div className="mt-2 text-sm">
+        Score: {trade.checklistScore}/9 | Suggested Risk:{' '}
+        <span className="font-semibold text-blue-600">
+          {trade.suggestedRisk}
+        </span>
       </div>
 
       {/* MOVED STOPS */}

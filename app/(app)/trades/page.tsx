@@ -2,18 +2,18 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Trade } from '@/types/trade';
-import { MovedStopResult } from '@/types/trade';
+import { inputClass } from '@/components/ui/inputStyles';
 import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 
 import { useTradesStore } from '@/hooks/useTradesStore';
 
 import DashboardCardLayout from '@/components/dashboard/DashboardCardLayout';
-import { inputClass } from '@/components/ui/inputStyles';
 
 import { detectMistakes } from '@/utils/detectMistakes';
 import { getSession } from '@/utils/getSession';
 import { calculateChecklist } from '@/utils/checklist';
 
+import { createDefaultTrade } from '@/utils/createDefaultTrade';
 import { TradeForm } from '@/components/trades/TradeForm';
 import { TradeModal } from '@/components/trades/TradeModal';
 
@@ -31,28 +31,6 @@ const emptyChecklist: Checklist = {
   smt: false,
 };
 
-const createDefaultTrade = (): Trade => ({
-  id: crypto.randomUUID(),
-  date: '',
-  entryTime: '',
-  exitTime: '',
-  session: '',
-  direction: 'Buy',
-  type: 'Scalp',
-  pair: '',
-  result: 'Win',
-  risk: '',
-  amount: '',
-  checklist: { ...emptyChecklist },
-  checklistScore: 0,
-  suggestedRisk: '0%',
-  remarks: '',
-  feeling: 'Calm',
-  movedStops: false,
-  movedStopsWorked: null,
-  behavioralMistakes: [],
-});
-
 export default function TradesPage() {
   // --------------------
   // STORE
@@ -60,17 +38,14 @@ export default function TradesPage() {
   const { trades, loadTrades } = useTradesStore();
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [trade, setTrade] = useState<Trade>(createDefaultTrade());
 
   const [deletedTrade, setDeletedTrade] = useState<Trade | null>(null);
   const [showUndo, setShowUndo] = useState(false);
 
   const [pairQuery, setPairQuery] = useState('');
   const [showPairDropdown, setShowPairDropdown] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const didLoad = useRef(false);
+  const [trade, setTrade] = useState<Trade>(createDefaultTrade());
 
   useEffect(() => {
     loadTrades();
@@ -203,7 +178,8 @@ export default function TradesPage() {
     setPairQuery(t.pair);
 
     setIsEditMode(true);
-    setIsModalOpen(true);
+    setIsModalOpen(true); // ✅ ONLY THIS
+
     setHighlightForm(true);
 
     formRef.current?.scrollIntoView({
@@ -211,9 +187,7 @@ export default function TradesPage() {
       block: 'start',
     });
 
-    setTimeout(() => {
-      setHighlightForm(false);
-    }, 2000);
+    setTimeout(() => setHighlightForm(false), 2000);
   };
 
   const handleDelete = (id: string) => {
@@ -235,12 +209,6 @@ export default function TradesPage() {
     addTradeToStore(deletedTrade);
     setDeletedTrade(null);
     setShowUndo(false);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setIsEditMode(false);
-    setEditingId(null);
   };
 
   // --------------------
@@ -268,55 +236,8 @@ export default function TradesPage() {
   // --------------------
   return (
     <DashboardCardLayout>
-      {/* FLOATING ADD BUTTON */}
-      <button
-        onClick={() => {
-          setIsModalOpen(true);
-          setTrade(createDefaultTrade());
-          setEditingId(null);
-          setIsEditMode(false);
-        }}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-primary text-primary-foreground text-2xl shadow-lg hover:scale-105 active:scale-95 transition flex items-center justify-center"
-      >
-        +
-      </button>
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-8">
         <h1 className="text-3xl font-bold">Trades</h1>
-
-        {/* ================= FORM ================= */}
-        <TradeModal open={isModalOpen} onClose={closeModal}>
-          {/* Header (optional but recommended since your modal is "blank") */}
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">
-              {isEditMode ? 'Edit Trade' : 'Add Trade'}
-            </h2>
-
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              ✕
-            </button>
-          </div>
-
-          <TradeForm
-            trade={trade}
-            setTrade={setTrade}
-            onSubmit={(e: any) => {
-              handleSubmit(e);
-              setIsModalOpen(false); // close after submit
-            }}
-            isEditMode={isEditMode}
-            inputClass={inputClass}
-            pairQuery={pairQuery}
-            setPairQuery={setPairQuery}
-            showPairDropdown={showPairDropdown}
-            setShowPairDropdown={setShowPairDropdown}
-            filteredPairs={filteredPairs}
-            pairDropdownRef={pairDropdownRef}
-            onToggleChecklist={handleChecklist}
-          />
-        </TradeModal>
 
         {/* ================= TABLE ================= */}
         <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
@@ -545,6 +466,31 @@ export default function TradesPage() {
           )}
         </div>
       </div>
+      <TradeModal
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setIsEditMode(false);
+          setEditingId(null);
+        }}
+      >
+        <div ref={formRef}>
+          <TradeForm
+            trade={trade}
+            setTrade={setTrade}
+            onSubmit={handleSubmit}
+            isEditMode={isEditMode}
+            inputClass={inputClass}
+            pairQuery={pairQuery}
+            setPairQuery={setPairQuery}
+            showPairDropdown={showPairDropdown}
+            setShowPairDropdown={setShowPairDropdown}
+            filteredPairs={filteredPairs}
+            pairDropdownRef={pairDropdownRef}
+            onToggleChecklist={handleChecklist}
+          />
+        </div>
+      </TradeModal>
     </DashboardCardLayout>
   );
 }
