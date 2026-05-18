@@ -31,6 +31,7 @@ export function TradeFilterBar({
 }: Props) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <h1 className="text-xl font-semibold mb-4">Filters:</h1>
       <div className="flex flex-wrap items-center gap-3">
         <MultiSelectDropdown
           label="Session"

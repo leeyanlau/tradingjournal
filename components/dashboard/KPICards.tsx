@@ -24,6 +24,13 @@ export default function KPICards({ stats, breakdown }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <KpiCard
+        label="Total PnL"
+        value={stats.totalPnL}
+        trend={
+          stats.totalPnL > 0 ? 'up' : stats.totalPnL < 0 ? 'down' : 'neutral'
+        }
+      />
+      <KpiCard
         label="Win Rate"
         value={stats.winRate != null ? `${stats.winRate.toFixed(1)}%` : '-'}
         tooltip={
@@ -59,13 +66,7 @@ export default function KPICards({ stats, breakdown }: Props) {
         }
         size="lg"
       />
-      <KpiCard
-        label="Total PnL"
-        value={stats.totalPnL}
-        trend={
-          stats.totalPnL > 0 ? 'up' : stats.totalPnL < 0 ? 'down' : 'neutral'
-        }
-      />
+
       <KpiCard
         label="Profit Factor"
         value={stats.profitFactor != null ? stats.profitFactor.toFixed(2) : '-'}

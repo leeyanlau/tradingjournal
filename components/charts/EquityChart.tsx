@@ -6,7 +6,10 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine,
+  ReferenceArea,
 } from 'recharts';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TradeTooltip } from './TradeTooltip';
 import { ChartEmptyState } from '@/components/ui/ChartEmptyState';
@@ -36,6 +39,45 @@ export function EquityChart({
     bar: isDark ? '#34d399' : '#10b981',
   };
 
+  const latestPnL = data?.length ? data[data.length - 1].balance : 0;
+  const isProfit = latestPnL >= 0;
+
+  const pnlColor = isProfit ? '#22c55e' : '#ef4444';
+
+  const [animatedPnL, setAnimatedPnL] = useState(0);
+
+  useEffect(() => {
+    if (!data?.length) return;
+
+    const latest = data[data.length - 1].balance;
+
+    let frame: number;
+
+    const animate = () => {
+      setAnimatedPnL((prev) => {
+        const diff = latest - prev;
+        return prev + diff * 0.15; // easing factor (higher = snappier)
+      });
+
+      frame = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => cancelAnimationFrame(frame);
+  }, [data]);
+
+  const values = data.map((d) => Number(d.balance));
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+
+  // padding so line doesn’t hug edges
+  const padding = (max - min) * 0.3 || 1;
+
+  const domainMin = Math.min(min, 0) - padding;
+  const domainMax = Math.max(max, 0) + padding;
+
   if (isLoading) {
     return (
       <Card className="rounded-2xl">
@@ -64,8 +106,15 @@ export function EquityChart({
 
   return (
     <Card className="rounded-2xl border border-border/50 shadow-sm">
-      <CardHeader>
+      <CardHeader className="flex flex-col items-start">
         <CardTitle>Equity Curve</CardTitle>
+
+        <p className="text-sm flex gap-2">
+          <span className="text-muted-foreground">Current PnL:</span>
+          <span className={isProfit ? 'text-green-500' : 'text-red-500'}>
+            ${latestPnL.toFixed(2)}
+          </span>
+        </p>
       </CardHeader>
 
       <CardContent className="min-w-0 h-[360px]">
@@ -80,10 +129,82 @@ export function EquityChart({
               <Line
                 type="monotone"
                 dataKey="balance"
-                stroke={colors.line}
-                strokeWidth={1.5}
-                dot={false}
+                stroke={pnlColor}
+                strokeWidth={2}
+                dot={(props: any) => {
+                  const { cx, cy, index, payload } = props;
+                  const isLast = index === data.length - 1;
+
+                  if (!isLast) return null;
+
+                  return (
+                    <g>
+                      {/* glow */}
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={10}
+                        fill={pnlColor}
+                        opacity={0.15}
+                      />
+
+                      {/* main dot */}
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={5}
+                        fill={pnlColor}
+                        stroke={isDark ? '#111827' : '#ffffff'}
+                        strokeWidth={2}
+                      />
+
+                      {/* 🔥 TRADINGVIEW STYLE PRICE TAG */}
+                      <g>
+                        {/* background pill */}
+                        <rect
+                          x={cx + 12}
+                          y={cy - 14}
+                          width={120}
+                          height={26}
+                          rx={6}
+                          fill={isDark ? '#111827' : '#ffffff'}
+                          stroke={pnlColor}
+                          strokeWidth={1}
+                        />
+                      </g>
+                    </g>
+                  );
+                }}
               />
+              <ReferenceLine
+                y={latestPnL}
+                stroke={pnlColor}
+                strokeDasharray="4 4"
+                label={{
+                  value: `${animatedPnL.toFixed(0)}`,
+                  position: 'left',
+                  fill: pnlColor,
+                  fontSize: 14,
+                  fontWeight: 700,
+                }}
+              />
+              <ReferenceLine
+                y={0}
+                stroke={isDark ? '#374151' : '#d1d5db'}
+                label={{
+                  value: `0`,
+                  position: 'left',
+                  fill: colors.text,
+                  fontSize: 12,
+                }}
+              />
+              <ReferenceArea
+                y1={0}
+                y2={latestPnL}
+                fill={isProfit ? '#22c55e' : '#ef4444'}
+                fillOpacity={0.08}
+              />
+
               <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
 
               <XAxis
@@ -91,7 +212,10 @@ export function EquityChart({
                 tick={{ fill: colors.text, fontSize: 12 }}
               />
 
-              <YAxis tick={{ fill: colors.text, fontSize: 12 }} />
+              <YAxis
+                tick={{ fill: colors.text, fontSize: 12 }}
+                domain={[domainMin, domainMax]}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
