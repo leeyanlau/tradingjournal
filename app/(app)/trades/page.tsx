@@ -6,6 +6,7 @@ import { inputClass } from '@/components/ui/inputStyles';
 import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 
 import { useTradesStore } from '@/hooks/useTradesStore';
+import { useTradeFilters } from '@/hooks/useTradeFilters';
 
 import DashboardCardLayout from '@/components/dashboard/DashboardCardLayout';
 
@@ -16,6 +17,7 @@ import { calculateChecklist } from '@/utils/checklist';
 import { createDefaultTrade } from '@/utils/createDefaultTrade';
 import { TradeForm } from '@/components/trades/TradeForm';
 import { TradeModal } from '@/components/trades/TradeModal';
+import { TradeFilterBar } from '@/components/dashboard/TradeFilterBar';
 
 type Checklist = Trade['checklist'];
 
@@ -231,266 +233,278 @@ export default function TradesPage() {
   // --------------------
   const analytics = useTradeAnalyticsV2(trades);
 
+  const { filters, setFilters, filteredTrades, toggleFilter, resetFilters } =
+    useTradeFilters(trades);
+
   // --------------------
   // UI
   // --------------------
   return (
     <DashboardCardLayout>
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-8">
-        <h1 className="text-3xl font-bold">Trades</h1>
-
-        {/* ================= TABLE ================= */}
-        <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
-          <div className="flex items-center justify-between p-4 border-b border-border/50">
-            <h2 className="text-lg font-semibold">Trade History</h2>
-
-            <div className="text-xs text-muted-foreground">
-              {analytics.enrichedTrades.length} trades
-            </div>
-          </div>
-          <div className="w-full max-w-full overflow-x-auto overflow-y-hidden border rounded-xl">
-            <div className="w-full overflow-x-auto">
-              <table className="min-w-full table-auto">
-                <thead className="bg-muted text-left sticky top-0 z-10">
-                  <tr>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      No.
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Date
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Entry
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Exit
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Session
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Pair
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Direction
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Type
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Risk %
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Result
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      PnL
-                    </th>
-
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Score
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Suggested Risk
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Feeling
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Moved Stops
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Stop Worked
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Mistakes
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Remarks
-                    </th>
-                    <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {[...analytics.enrichedTrades]
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date + 'T' + b.entryTime).getTime() -
-                        new Date(a.date + 'T' + a.entryTime).getTime()
-                    )
-                    .map((t, i, arr) => (
-                      <tr
-                        key={t.id || i}
-                        className="border-t hover:bg-muted/40 transition"
-                      >
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {arr.length - i}
-                        </td>
-                        <td className="px-4 py-2">{t.date}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.entryTime}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.exitTime}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.session}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.pair || '-'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.direction}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.type}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.risk}
-                        </td>
-                        <td
-                          className={`px-4 py-2 whitespace-nowrap font-medium ${
-                            t.result === 'Win'
-                              ? 'text-green-600'
-                              : t.result === 'Loss'
-                                ? 'text-red-600'
-                                : 'text-muted-foreground'
-                          }`}
-                        >
-                          {t.result}
-                        </td>
-                        <td
-                          className={`px-4 py-2 whitespace-nowrap ${
-                            Number(t.amount) > 0
-                              ? 'text-green-600'
-                              : Number(t.amount) < 0
-                                ? 'text-red-600'
-                                : 'text-muted-foreground'
-                          }`}
-                        >
-                          {t.amount}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-center">
-                          {t.checklistScore}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.suggestedRisk}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.feeling}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {t.movedStops ? (
-                            <span className="text-blue-600 font-medium">
-                              Adjusted
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap">
-                          {!t.movedStops ? (
-                            '-'
-                          ) : t.movedStopsWorked === 'PROTECTED' ? (
-                            <span className="text-green-600 font-medium">
-                              Protected
-                            </span>
-                          ) : t.movedStopsWorked === 'OVERMANAGED' ? (
-                            <span className="text-red-600 font-medium">
-                              Overmanaged
-                            </span>
-                          ) : t.movedStopsWorked === 'IRRELEVANT' ? (
-                            <span className="text-muted-foreground">
-                              Neutral
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-left text-xs">
-                          <ul className="list-disc list-inside">
-                            {t.behavioralMistakes
-                              .filter((m) => m.category === 'behavioral')
-                              .map((m, idx) => (
-                                <li key={idx}>{m.type}</li>
-                              ))}
-                          </ul>
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap text-left text-xs">
-                          {t.remarks || '-'}
-                        </td>
-                        <td className="px-4 py-2 whitespace-nowrap space-x-2">
-                          <button
-                            onClick={() => handleEdit(t)}
-                            className="text-blue-600 hover:underline"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(t.id)}
-                            className="text-red-600 hover:underline"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          {showUndo && deletedTrade && (
-            <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow flex items-center gap-4 z-50">
-              <span>Trade deleted</span>
-
-              <button
-                onClick={handleUndo}
-                className="text-green-400 font-semibold hover:underline"
-              >
-                Undo
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowUndo(false);
-                  setDeletedTrade(null);
-                }}
-                className="text-muted-foreground hover:underline"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-      <TradeModal
-        open={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setIsEditMode(false);
-          setEditingId(null);
-        }}
-      >
-        <div ref={formRef}>
-          <TradeForm
-            trade={trade}
-            setTrade={setTrade}
-            onSubmit={handleSubmit}
-            isEditMode={isEditMode}
-            inputClass={inputClass}
-            pairQuery={pairQuery}
-            setPairQuery={setPairQuery}
-            showPairDropdown={showPairDropdown}
-            setShowPairDropdown={setShowPairDropdown}
-            filteredPairs={filteredPairs}
-            pairDropdownRef={pairDropdownRef}
-            onToggleChecklist={handleChecklist}
+      <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-10">
+          <TradeFilterBar
+            filters={filters}
+            setFilters={setFilters}
+            toggleFilter={toggleFilter}
+            resetFilters={resetFilters}
+            pairOptions={analytics.pairSuggestions}
           />
+          <h1 className="text-3xl font-bold">Trades</h1>
+
+          {/* ================= TABLE ================= */}
+          <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+            <div className="flex items-center justify-between p-4 border-b border-border/50">
+              <h2 className="text-lg font-semibold">Trade History</h2>
+
+              <div className="text-xs text-muted-foreground">
+                {analytics.enrichedTrades.length} trades
+              </div>
+            </div>
+            <div className="w-full max-w-full overflow-x-auto overflow-y-hidden border rounded-xl">
+              <div className="w-full overflow-x-auto">
+                <table className="min-w-full table-auto">
+                  <thead className="bg-muted text-left sticky top-0 z-10">
+                    <tr>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        No.
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Date
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Entry
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Exit
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Session
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Pair
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Direction
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Type
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Risk %
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Result
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        PnL
+                      </th>
+
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Score
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Suggested Risk
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Feeling
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Moved Stops
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Stop Worked
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Mistakes
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Remarks
+                      </th>
+                      <th className="px-4 py-2 whitespace-nowrap text-left font-medium text-muted-foreground">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {[...analytics.enrichedTrades]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.date + 'T' + b.entryTime).getTime() -
+                          new Date(a.date + 'T' + a.entryTime).getTime()
+                      )
+                      .map((t, i, arr) => (
+                        <tr
+                          key={t.id || i}
+                          className="border-t hover:bg-muted/40 transition"
+                        >
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {arr.length - i}
+                          </td>
+                          <td className="px-4 py-2">{t.date}</td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.entryTime}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.exitTime}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.session}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.pair || '-'}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.direction}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.type}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.risk}
+                          </td>
+                          <td
+                            className={`px-4 py-2 whitespace-nowrap font-medium ${
+                              t.result === 'Win'
+                                ? 'text-green-600'
+                                : t.result === 'Loss'
+                                  ? 'text-red-600'
+                                  : 'text-muted-foreground'
+                            }`}
+                          >
+                            {t.result}
+                          </td>
+                          <td
+                            className={`px-4 py-2 whitespace-nowrap ${
+                              Number(t.amount) > 0
+                                ? 'text-green-600'
+                                : Number(t.amount) < 0
+                                  ? 'text-red-600'
+                                  : 'text-muted-foreground'
+                            }`}
+                          >
+                            {t.amount}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-center">
+                            {t.checklistScore}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.suggestedRisk}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.feeling}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {t.movedStops ? (
+                              <span className="text-blue-600 font-medium">
+                                Adjusted
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap">
+                            {!t.movedStops ? (
+                              '-'
+                            ) : t.movedStopsWorked === 'PROTECTED' ? (
+                              <span className="text-green-600 font-medium">
+                                Protected
+                              </span>
+                            ) : t.movedStopsWorked === 'OVERMANAGED' ? (
+                              <span className="text-red-600 font-medium">
+                                Overmanaged
+                              </span>
+                            ) : t.movedStopsWorked === 'IRRELEVANT' ? (
+                              <span className="text-muted-foreground">
+                                Neutral
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-left text-xs">
+                            <ul className="list-disc list-inside">
+                              {t.behavioralMistakes
+                                .filter((m) => m.category === 'behavioral')
+                                .map((m, idx) => (
+                                  <li key={idx}>{m.type}</li>
+                                ))}
+                            </ul>
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap text-left text-xs">
+                            {t.remarks || '-'}
+                          </td>
+                          <td className="px-4 py-2 whitespace-nowrap space-x-2">
+                            <button
+                              onClick={() => handleEdit(t)}
+                              className="text-blue-600 hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(t.id)}
+                              className="text-red-600 hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {showUndo && deletedTrade && (
+              <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-black text-white px-4 py-2 rounded-xl shadow flex items-center gap-4 z-50">
+                <span>Trade deleted</span>
+
+                <button
+                  onClick={handleUndo}
+                  className="text-green-400 font-semibold hover:underline"
+                >
+                  Undo
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowUndo(false);
+                    setDeletedTrade(null);
+                  }}
+                  className="text-muted-foreground hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </TradeModal>
+        <TradeModal
+          open={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setIsEditMode(false);
+            setEditingId(null);
+          }}
+        >
+          <div ref={formRef}>
+            <TradeForm
+              trade={trade}
+              setTrade={setTrade}
+              onSubmit={handleSubmit}
+              isEditMode={isEditMode}
+              inputClass={inputClass}
+              pairQuery={pairQuery}
+              setPairQuery={setPairQuery}
+              showPairDropdown={showPairDropdown}
+              setShowPairDropdown={setShowPairDropdown}
+              filteredPairs={filteredPairs}
+              pairDropdownRef={pairDropdownRef}
+              onToggleChecklist={handleChecklist}
+            />
+          </div>
+        </TradeModal>
+      </div>
     </DashboardCardLayout>
   );
 }

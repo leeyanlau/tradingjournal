@@ -61,7 +61,7 @@ export function TradeFilterBar({
           onToggle={(v) => toggleFilter('feeling', v)}
         />
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <input
             type="date"
             value={filters.startDate}
@@ -71,7 +71,7 @@ export function TradeFilterBar({
                 startDate: e.target.value,
               }))
             }
-            className="border border-border p-2 rounded"
+            className="border border-border p-2 rounded w-full"
           />
 
           <input
@@ -83,7 +83,7 @@ export function TradeFilterBar({
                 endDate: e.target.value,
               }))
             }
-            className="border border-border p-2 rounded"
+            className="border border-border p-2 rounded w-full"
           />
         </div>
 

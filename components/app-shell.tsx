@@ -11,7 +11,7 @@ import { Menu, X } from 'lucide-react';
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
