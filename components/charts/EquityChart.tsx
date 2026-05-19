@@ -157,21 +157,6 @@ export function EquityChart({
                         stroke={isDark ? '#111827' : '#ffffff'}
                         strokeWidth={2}
                       />
-
-                      {/* 🔥 TRADINGVIEW STYLE PRICE TAG */}
-                      <g>
-                        {/* background pill */}
-                        <rect
-                          x={cx + 12}
-                          y={cy - 14}
-                          width={120}
-                          height={26}
-                          rx={6}
-                          fill={isDark ? '#111827' : '#ffffff'}
-                          stroke={pnlColor}
-                          strokeWidth={1}
-                        />
-                      </g>
                     </g>
                   );
                 }}
