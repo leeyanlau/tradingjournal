@@ -40,8 +40,6 @@ export default function AnalyticsPage() {
     analytics.pairGroups
   );
 
-  console.log(analytics);
-
   return (
     <DashboardCardLayout>
       <div className="max-w-7xl mx-auto space-y-10 p-6">

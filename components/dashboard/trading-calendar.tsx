@@ -1,7 +1,12 @@
 'use client';
 
+import { Trade } from '@/types/trade';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+
+type Props = {
+  trades: Trade[];
+};
 
 export default function TradingCalendar({ trades }: Props) {
   // -------------------------
