@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Trade } from '@/types/trade';
-import { buildTradeAnalytics } from '@/lib/analytics/v2/pipeline';
+import { buildTradeAnalytics } from '@/lib/analytics/pipeline';
 import { calculateKPIs } from '@/lib/analytics/calculateKPIs';
 
 export const useTradeAnalyticsV2 = (trades: Trade[]) => {
