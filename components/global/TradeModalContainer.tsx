@@ -20,20 +20,25 @@ export function TradeModalContainer({
 
   const { trades } = useTradesStore();
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    useTradesStore.setState({
-      trades: [
-        ...trades,
-        {
-          ...trade,
-          behavioralMistakes: detectMistakes(trade),
-        },
-      ],
-    });
+    try {
+      const store = useTradesStore.getState();
 
-    closeModal();
+      const finalTrade = {
+        ...trade,
+        behavioralMistakes: detectMistakes(trade),
+        id: trade.id || crypto.randomUUID(),
+      };
+
+      await store.addTrade(finalTrade);
+
+      closeModal();
+    } catch (err) {
+      console.error('Failed to add trade:', err);
+      alert('Failed to add trade');
+    }
   };
 
   return (

@@ -7,26 +7,26 @@ import { detectMistakes } from '@/utils/detectMistakes';
 type Store = {
   trades: Trade[];
   hydrated: boolean;
-  loadTrades: () => void;
 
-  addTrade: (trade: Trade) => void;
-  updateTrade: (id: string, trade: Trade) => void;
-  deleteTrade: (id: string) => void;
+  loadTrades: () => Promise<void>;
+
+  addTrade: (trade: Trade) => Promise<void>;
+  updateTrade: (id: string, trade: Trade) => Promise<void>;
+  deleteTrade: (id: string) => Promise<void>;
 };
 
 export const useTradesStore = create<Store>((set, get) => {
-  const persist = (trades: Trade[]) => {
-    tradeStorage.set(trades);
-  };
-
   return {
     trades: [],
     hydrated: false,
 
-    loadTrades: () => {
+    // -------------------------
+    // LOAD
+    // -------------------------
+    loadTrades: async () => {
       if (get().hydrated) return;
 
-      const saved = tradeStorage.get();
+      const saved = await tradeStorage.get();
 
       const final =
         saved.length === 0
@@ -40,48 +40,50 @@ export const useTradesStore = create<Store>((set, get) => {
             }));
 
       set({ trades: final, hydrated: true });
-      persist(final);
     },
 
-    addTrade: (trade) => {
-      set((state) => {
-        const updated = [
-          ...state.trades,
-          {
-            ...trade,
-            behavioralMistakes: detectMistakes(trade),
-          },
-        ];
+    // -------------------------
+    // ADD
+    // -------------------------
+    addTrade: async (trade) => {
+      const newTrade: Trade = {
+        ...trade,
+        behavioralMistakes: detectMistakes(trade),
+      };
 
-        persist(updated);
-        return { trades: updated };
-      });
+      await tradeStorage.add(newTrade);
+
+      set((state) => ({
+        trades: [newTrade, ...state.trades],
+      }));
     },
 
-    updateTrade: (id, trade) => {
-      set((state) => {
-        const updated = state.trades.map((t) =>
-          t.id === id
-            ? {
-                ...trade,
-                id,
-                behavioralMistakes: detectMistakes(trade),
-              }
-            : t
-        );
+    // -------------------------
+    // UPDATE
+    // -------------------------
+    updateTrade: async (id, trade) => {
+      const updatedTrade: Trade = {
+        ...trade,
+        id,
+        behavioralMistakes: detectMistakes(trade),
+      };
 
-        persist(updated);
-        return { trades: updated };
-      });
+      await tradeStorage.update(id, updatedTrade);
+
+      set((state) => ({
+        trades: state.trades.map((t) => (t.id === id ? updatedTrade : t)),
+      }));
     },
 
-    deleteTrade: (id) => {
-      set((state) => {
-        const updated = state.trades.filter((t) => t.id !== id);
+    // -------------------------
+    // DELETE
+    // -------------------------
+    deleteTrade: async (id) => {
+      await tradeStorage.remove(id);
 
-        persist(updated);
-        return { trades: updated };
-      });
+      set((state) => ({
+        trades: state.trades.filter((t) => t.id !== id),
+      }));
     },
   };
 });

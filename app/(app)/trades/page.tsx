@@ -92,26 +92,6 @@ export default function TradesPage() {
   const [highlightForm, setHighlightForm] = useState(false);
 
   // --------------------
-  // HELPERS
-  // --------------------
-  const updateTradeInStore = (updated: Trade) => {
-    const updatedTrades = trades.map((t) =>
-      t.id === updated.id ? updated : t
-    );
-    useTradesStore.setState({ trades: updatedTrades });
-  };
-
-  const addTradeToStore = (newTrade: Trade) => {
-    useTradesStore.setState({ trades: [...trades, newTrade] });
-  };
-
-  const deleteTradeFromStore = (id: string) => {
-    useTradesStore.setState({
-      trades: trades.filter((t) => t.id !== id),
-    });
-  };
-
-  // --------------------
   // HANDLERS
   // --------------------
   const handleChange = (
@@ -144,11 +124,10 @@ export default function TradesPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const rawAmount = Number(trade.amount);
-
     if (isNaN(rawAmount)) return alert('Invalid PnL');
 
     let normalizedAmount = rawAmount;
@@ -165,10 +144,17 @@ export default function TradesPage() {
       }),
     };
 
-    if (editingId) {
-      updateTradeInStore(finalTrade);
-    } else {
-      addTradeToStore(finalTrade);
+    const store = useTradesStore.getState();
+
+    try {
+      if (editingId) {
+        await store.updateTrade(editingId, finalTrade);
+      } else {
+        await store.addTrade(finalTrade);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save trade');
     }
 
     setTrade(createDefaultTrade());
@@ -195,12 +181,18 @@ export default function TradesPage() {
     setTimeout(() => setHighlightForm(false), 2000);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     const t = trades.find((x) => x.id === id);
     if (!t) return;
 
     setDeletedTrade(t);
-    deleteTradeFromStore(id);
+
+    try {
+      await useTradesStore.getState().deleteTrade(id);
+    } catch (err) {
+      console.error(err);
+    }
+
     setShowUndo(true);
 
     setTimeout(() => {
@@ -209,9 +201,15 @@ export default function TradesPage() {
     }, 5000);
   };
 
-  const handleUndo = () => {
+  const handleUndo = async () => {
     if (!deletedTrade) return;
-    addTradeToStore(deletedTrade);
+
+    try {
+      await useTradesStore.getState().addTrade(deletedTrade);
+    } catch (err) {
+      console.error(err);
+    }
+
     setDeletedTrade(null);
     setShowUndo(false);
   };

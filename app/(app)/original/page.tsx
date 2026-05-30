@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Trade, MovedStopResult } from '@/types/trade';
+import { Trade } from '@/types/trade';
 import { useTradeAnalyticsV2 } from '@/hooks/useTradeAnalyticsV2';
 import { useTradeCharts } from '@/hooks/useTradeCharts';
 import { useBehavioralAnalytics } from '@/hooks/useBehavioralAnalytics';
@@ -86,6 +86,7 @@ type Mistake = {
 
 export default function Home() {
   const pairInputRef = useRef<HTMLDivElement>(null);
+
   // --------------------
   // STATE
   // --------------------
@@ -114,48 +115,59 @@ export default function Home() {
   // EFFECT: LOAD TRADES
   // --------------------
   useEffect(() => {
-    const saved = tradeStorage.get();
+    let isMounted = true;
 
-    if (saved.length === 0) {
-      const withMistakes = dummyTrades.map((t) => ({
-        ...t,
-        behavioralMistakes: detectMistakes(t),
-      }));
-      setTrades(withMistakes);
+    const loadTrades = async () => {
+      const saved = await tradeStorage.get();
+
+      if (!isMounted) return;
+
+      if (saved.length === 0) {
+        const withMistakes = dummyTrades.map((t) => ({
+          ...t,
+          behavioralMistakes: detectMistakes(t),
+        }));
+
+        setTrades(withMistakes);
+        didLoad.current = true;
+        return;
+      }
+
+      try {
+        const parsed: Trade[] = saved;
+
+        const normalized = parsed.map((t) => ({
+          ...createDefaultTrade(),
+          ...t,
+          id: t.id || crypto.randomUUID(),
+          movedStopsWorked: t.movedStopsWorked ?? null,
+          behavioralMistakes: detectMistakes(t),
+        }));
+
+        setTrades(normalized);
+      } catch {
+        const withMistakes = dummyTrades.map((t) => ({
+          ...t,
+          behavioralMistakes: detectMistakes(t),
+        }));
+
+        setTrades(withMistakes);
+      }
+
       didLoad.current = true;
-      return;
-    }
+    };
 
-    try {
-      const parsed: Trade[] = saved;
+    loadTrades();
 
-      const normalized = parsed.map((t) => ({
-        ...createDefaultTrade(),
-        ...t,
-        id: t.id || crypto.randomUUID(),
-        movedStopsWorked: t.movedStopsWorked ?? null,
-        behavioralMistakes: detectMistakes(t), // <-- add this
-      }));
-
-      setTrades(normalized);
-    } catch {
-      const withMistakes = dummyTrades.map((t) => ({
-        ...t,
-        behavioralMistakes: detectMistakes(t),
-      }));
-      setTrades(withMistakes);
-    }
-
-    didLoad.current = true;
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // --------------------
-  // EFFECT: SAVE TRADES
+  // ❌ REMOVED: SAVE EFFECT
+  // (Supabase store handles persistence now)
   // --------------------
-  useEffect(() => {
-    if (!didLoad.current) return;
-    tradeStorage.set(trades);
-  }, [trades]);
 
   // --------------------
   // HANDLER: FORM INPUT CHANGE
@@ -182,6 +194,7 @@ export default function Home() {
       ...trade.checklist,
       [key]: !trade.checklist[key],
     };
+
     const { score, risk } = calculateChecklist(updatedChecklist);
 
     setTrade({
@@ -193,12 +206,11 @@ export default function Home() {
   };
 
   // --------------------
-  // HANDLE FORM SUBMIT: ADD OR EDIT TRADE
+  // HANDLE FORM SUBMIT
   // --------------------
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 🔒 REQUIRED VALIDATION
     if (!trade.date) return alert('Date is required');
     if (!trade.entryTime) return alert('Entry time is required');
     if (!trade.exitTime) return alert('Exit time is required');
@@ -211,7 +223,6 @@ export default function Home() {
       return alert('Please specify how your stop adjustment performed');
     }
 
-    // 🔢 VALIDATE NUMBERS
     const rawAmount = Number(trade.amount);
     if (isNaN(rawAmount)) return alert('PnL must be a valid number');
 
@@ -219,32 +230,27 @@ export default function Home() {
     if (isNaN(riskValue))
       return alert('Risk must be a valid percentage (e.g. 0.5, 1)');
 
-    // 🔄 NORMALIZE PnL
     let normalizedAmount = rawAmount;
     if (trade.result === 'Loss') normalizedAmount = -Math.abs(rawAmount);
     if (trade.result === 'Win') normalizedAmount = Math.abs(rawAmount);
     if (trade.result === 'Breakeven') normalizedAmount = 0;
 
-    // 📝 BUILD FINAL TRADE OBJECT
     const finalTrade: Trade = {
       ...trade,
       id: editingId || trade.id || crypto.randomUUID(),
       amount: String(normalizedAmount),
-      // ✅ Compute mistakes automatically
       behavioralMistakes: detectMistakes({
         ...trade,
         amount: String(normalizedAmount),
       }),
     };
 
-    // ➕ ADD OR ✏️ EDIT
     setTrades((prev) =>
       editingId
         ? prev.map((t) => (t.id === editingId ? finalTrade : t))
         : [...prev, finalTrade]
     );
 
-    // 🔄 RESET FORM
     setTrade(createDefaultTrade());
     setPairQuery('');
     setEditingId(null);
