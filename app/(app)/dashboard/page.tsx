@@ -15,6 +15,7 @@ import { useTradeFilters } from '@/hooks/useTradeFilters';
 import { TradeFilterBar } from '@/components/dashboard/TradeFilterBar';
 import { useTradeCharts } from '@/hooks/useTradeCharts';
 import { EquityChart } from '@/components/charts/EquityChart';
+import TradingCalendar from '@/components/dashboard/trading-calendar';
 
 export default function DashboardPage() {
   // 1. LOAD GLOBAL TRADES
@@ -75,6 +76,12 @@ export default function DashboardPage() {
               breakevenCount: analytics.breakevenCount,
             }}
           />
+
+          <div className="rounded-xl bg-card text-card-foreground shadow-sm">
+            <div className="trade-calendar">
+              <TradingCalendar trades={analytics.enrichedTrades} />
+            </div>
+          </div>
 
           {/* MOVED STOPS */}
           <MovedStopsCard stats={behavioral.movedStops} />

@@ -49,6 +49,9 @@ export default function TradesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [trade, setTrade] = useState<Trade>(createDefaultTrade());
 
+  const { filters, setFilters, filteredTrades, toggleFilter, resetFilters } =
+    useTradeFilters(trades);
+
   useEffect(() => {
     loadTrades();
   }, [loadTrades]);
@@ -232,9 +235,6 @@ export default function TradesPage() {
   // ANALYTICS
   // --------------------
   const analytics = useTradeAnalyticsV2(trades);
-
-  const { filters, setFilters, filteredTrades, toggleFilter, resetFilters } =
-    useTradeFilters(trades);
 
   // --------------------
   // UI
