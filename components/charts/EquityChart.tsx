@@ -78,6 +78,13 @@ export function EquityChart({
   const domainMin = Math.min(min, 0) - padding;
   const domainMax = Math.max(max, 0) + padding;
 
+  useEffect(() => {
+    console.log(
+      'container size check',
+      document.querySelector('.recharts-responsive-container')
+    );
+  }, []);
+
   if (isLoading) {
     return (
       <Card className="rounded-2xl">
@@ -118,7 +125,7 @@ export function EquityChart({
       </CardHeader>
 
       <CardContent className="min-w-0 h-[360px]">
-        <div className="relative w-full h-[260px] md:h-[320px] lg:h-[360px] min-h-[260px]">
+        <div className="relative w-full h-[360px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data}>
               <Tooltip

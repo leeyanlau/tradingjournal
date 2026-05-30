@@ -64,7 +64,9 @@ export default function DashboardPage() {
           />
 
           <section className="space-y-6">
-            <EquityChart data={charts.equityCurve} />
+            <div className="h-[360px] w-full">
+              <EquityChart data={charts.equityCurve} />
+            </div>
           </section>
 
           {/* KPI ROW */}
