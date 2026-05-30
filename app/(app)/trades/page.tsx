@@ -243,6 +243,7 @@ export default function TradesPage() {
     <DashboardCardLayout>
       <div className="min-h-screen bg-background text-foreground p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-10">
+          <h1 className="text-3xl font-bold">Trades</h1>
           <TradeFilterBar
             filters={filters}
             setFilters={setFilters}
@@ -250,8 +251,6 @@ export default function TradesPage() {
             resetFilters={resetFilters}
             pairOptions={analytics.pairSuggestions}
           />
-          <h1 className="text-3xl font-bold">Trades</h1>
-
           {/* ================= TABLE ================= */}
           <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm">
             <div className="flex items-center justify-between p-4 border-b border-border/50">
